@@ -1,12 +1,12 @@
 #! /usr/bin/python
 
-import TensorTools as tt
+import tensor_tools
 from functools import reduce
 
 #-----------------------Function Definitions----------------------#
 
 
-def FormatIndices(source_string,delimiters):
+def format_indices(source_string,delimiters):
     target_string = ""
     i=0
     while i<len(source_string):
@@ -32,17 +32,17 @@ def FormatIndices(source_string,delimiters):
     return target_string
 
 
-def SPPoly2Mathematica(poly):
+def sympy_poly_to_mathematica(poly):
     polystring = str(poly.as_expr())
     polystring = polystring.replace('_{','[')
     polystring = polystring.replace('}',']')
     polystring = polystring.replace('**','^')
-    polystring = FormatIndices(polystring,['[',']'])
+    polystring = format_indices(polystring,['[',']'])
     polystring = polystring.replace('alpha','[Alpha]')
     polystring = polystring.replace('beta','[Beta]')
     return polystring
 
-def TensorPoly2Mathematica(r):
+def tensor_poly_to_mathematica(r):
     """
     Convert a polynomial of A_{x1x2x3...} tensors to mathematica polynomial
     with variables x_{123...}. Takes a `MRational` object of the form poly/1.
@@ -55,15 +55,15 @@ def TensorPoly2Mathematica(r):
     pair = r.nd_list[0]
     assert len(pair[1])==1 and list(pair[1].values())[0]==1, "Denominator not one."
     r_denom = list(pair[1].keys())[0]
-    assert r_denom == r_denom.One(), "Denominator not one."
+    assert r_denom == r_denom.one(), "Denominator not one."
     r_num = pair[0]
-    assert r_num.Proportional(r_num.One()), "Numerator not poly"
+    assert r_num.is_proportional(r_num.one()), "Numerator not poly"
 
     # Compute the mapping from AT tensor notation to Mathematica subscripts.
-    tensor_symbols = r.GetTensorSymbols()
+    tensor_symbols = r.tensor_symbols()
     string_map = {}
     for sym in tensor_symbols:
-        head,prefix,index = tt.SplitTensorSymbol(sym)
+        head,prefix,index = tensor_tools.split_tensor_symbol(sym)
         istring = reduce(lambda x,y:str(x)+str(y),index)
         #Fix in case of single character
         istring = str(istring)
@@ -80,7 +80,7 @@ def TensorPoly2Mathematica(r):
     return target_string,list(string_map.values())
 
 
-def SubspaceTensorPoly2Mathematica(r):
+def subspace_tensor_poly_to_mathematica(r):
     # Check that r is `MRational` of the form poly/1
     if len(r.nd_list)==0:
         return "0",[]
@@ -88,15 +88,15 @@ def SubspaceTensorPoly2Mathematica(r):
     pair = r.nd_list[0]
     assert len(pair[1])==1 and list(pair[1].values())[0]==1, "Denominator not one."
     r_denom = list(pair[1].keys())[0]
-    assert r_denom == r_denom.One(), "Denominator not one."
+    assert r_denom == r_denom.one(), "Denominator not one."
     r_num = pair[0]
-    assert r_num.Proportional(r_num.One()), "Numerator not poly"
+    assert r_num.is_proportional(r_num.one()), "Numerator not poly"
 
     # Compute the mapping from AT tensor notation to Mathematica subscripts.
-    tensor_symbols = r.GetTensorSymbols()
+    tensor_symbols = r.tensor_symbols()
     string_map = {}
     for sym in tensor_symbols:
-        head,prefix,index = tt.SplitTensorSymbol(sym)
+        head,prefix,index = tensor_tools.split_tensor_symbol(sym)
         istring = ""
         for p,s in zip(prefix,index):
             istring+=str(p)+str(s)
@@ -116,7 +116,7 @@ def SubspaceTensorPoly2Mathematica(r):
     return target_string,list(string_map.values())
 
 
-def SubspaceTensorPoly2Sage(r):
+def subspace_tensor_poly_to_sage(r):
     # Check that r is `MRational` of the form poly/1
     if len(r.nd_list)==0:
         return "0",[]
@@ -124,15 +124,15 @@ def SubspaceTensorPoly2Sage(r):
     pair = r.nd_list[0]
     assert len(pair[1])==1 and list(pair[1].values())[0]==1, "Denominator not one."
     r_denom = list(pair[1].keys())[0]
-    assert r_denom == r_denom.One(), "Denominator not one."
+    assert r_denom == r_denom.one(), "Denominator not one."
     r_num = pair[0]
-    assert r_num.Proportional(r_num.One()), "Numerator not poly"
+    assert r_num.is_proportional(r_num.one()), "Numerator not poly"
 
     # Compute the mapping from AT tensor notation to Mathematica subscripts.
-    tensor_symbols = r.GetTensorSymbols()
+    tensor_symbols = r.tensor_symbols()
     string_map = {}
     for sym in tensor_symbols:
-        head,prefix,index = tt.SplitTensorSymbol(sym)
+        head,prefix,index = tensor_tools.split_tensor_symbol(sym)
         istring = ""
         for p,s in zip(prefix,index):
             istring+=str(p)+str(s)
@@ -153,7 +153,7 @@ def SubspaceTensorPoly2Sage(r):
 
 
 
-def EdgeTuple2PEString(edges):
+def edge_tuple_to_pestring(edges):
     string = ""
     for edge in edges:
         if edge[0]==0 and edge[1]==0:
@@ -169,34 +169,34 @@ def EdgeTuple2PEString(edges):
             string+=var+"["+str(abs(edge[0]))+","+str(abs(edge[1]))+"]*"
     return string.strip('*')
 
-def MRing2MathematicaPE(ring):
+def mring_to_mathematica_pe(ring):
     string = ""
     for key in ring.Mdict.keys():
-        string += "("+SPPoly2Mathematica(ring.Mdict[key])+")"
-        edgestring = EdgeTuple2PEString(key)
+        string += "("+sympy_poly_to_mathematica(ring.Mdict[key])+")"
+        edgestring = edge_tuple_to_pestring(key)
         if edgestring=="":
             string+=edgestring+"+"
         else:
-            string += "*"+EdgeTuple2PEString(key) + "+"
+            string += "*"+edge_tuple_to_pestring(key) + "+"
     string = string.strip("+")
     string = string.strip("*")
     return string
 
-def MRational2MathematicaPE(rat):
+def mrational_to_mathematica_pe(rat):
     string = ""
     for pair in rat.nd_list:
-        string+='('+MRing2MathematicaPE(pair[0])+')/'
+        string+='('+mring_to_mathematica_pe(pair[0])+')/'
         dstring = ""
         for ring,power in pair[1].items():
             if power==1:
-                dstring+='('+MRing2MathematicaPE(ring)+')'
+                dstring+='('+mring_to_mathematica_pe(ring)+')'
             else:
-                dstring+='('+MRing2MathematicaPE(ring)+')^'+str(power)
+                dstring+='('+mring_to_mathematica_pe(ring)+')^'+str(power)
         string+='('+dstring+')+'
     string = string.strip('+')
     return string
 
-def MRational2File(rat,filename):
+def mrational_to_file(rat,filename):
     text_file = open(filename, "w")
-    text_file.write(MRational2MathematicaPE(rat))
+    text_file.write(mrational_to_mathematica_pe(rat))
     text_file.close()

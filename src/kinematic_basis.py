@@ -1,5 +1,5 @@
-from MRing import MRing
-from PermutationTools import GetMonomialSignature, GetMonomialTag, SymmetricOrbit, GetMinimalTag, TupleCompare
+from mring import MRing
+from permutation_tools import monomial_signature, monomial_tag, symmetric_orbit, minimal_tag, tuple_compare
 from itertools import permutations,product
 import pickle
 from sympy import Rational, poly, symbols
@@ -14,7 +14,7 @@ class Basis():
 		for i in range(1,self.npoint+1):
 			self.symbolblocks.append([-i,i,100+i])
 
-	def EjectMasses(self,r):
+	def eject_masses(self,r):
 		""" Eject masses from MRing generator pairs to polynomial ring. """
 		rnew = MRing({})
 		m_1 = symbols('m_1')
@@ -37,17 +37,17 @@ class Basis():
 			p*=masspoly
 			rnew.Mdict.setdefault(newkey,r.PolyZero())
 			rnew+=MRing({newkey:p})
-		rnew.CullZeros()
+		rnew.cull_zeros()
 		return rnew
 
-	def ZeroMasses(self,r,masses):
+	def zero_masses(self,r,masses):
 		rnew = MRing(r)
 		for mass in masses:
-			rnew = rnew.EvaluatePoly(mass,0)
-		rnew.CullZeros()
+			rnew = rnew.evaluate_poly(mass,0)
+		rnew.cull_zeros()
 		return rnew
 
-	def GroupMasses(self,r,massmap):
+	def group_masses(self,r,massmap):
 		rnew = MRing(r)
 		for key in massmap:
 			for mass in key:
@@ -55,10 +55,10 @@ class Basis():
 				#rnew = rnew.MonomialReplacement(mass,target_poly)
 				#rnew = rnew.ReplReplacement(mass,target_poly)
 				rnew = rnew.ReplReplacement(mass,massmap[key])
-		rnew.CullZeros()
+		rnew.cull_zeros()
 		return rnew
 
-	def OnShellRestriction(self,r):
+	def onshell_restriction(self,r):
 			rnew = MRing(r)
 			momentumtarget = [[-1,-i] for i in range(1,self.npoint)]
 			rnew = rnew.Replacement({-self.npoint:momentumtarget})
@@ -68,16 +68,16 @@ class Basis():
 			for i in range(1,self.npoint-2):
 				for j in range(i+1,self.npoint):
 						pairtarget.append([-1,(-j,-i)])
-			rnew = rnew.PairReplacement({(-(self.npoint-1),-(self.npoint-2)):pairtarget})
+			rnew = rnew.pair_replacement({(-(self.npoint-1),-(self.npoint-2)):pairtarget})
 
 			#Applies only to symmetric tensors!
 			if self.spin==1 or self.spin==2:
 				for i in range(1,self.npoint):
-					rnew = rnew.ZeroPair((-i,i))
+					rnew = rnew.zero_pair((-i,i))
 				pairtarget=[[Rational(-1,1),(-i,self.npoint)] for i in range(1,self.npoint-1)]
-				rnew = rnew.PairReplacement({(-(self.npoint-1),self.npoint):pairtarget})
+				rnew = rnew.pair_replacement({(-(self.npoint-1),self.npoint):pairtarget})
 
-			rnew.CullZeros()
+			rnew.cull_zeros()
 			return rnew
 	
 #
@@ -89,11 +89,11 @@ class Basis():
 #	def KeyCompare(self,A,B):
 #		"""
 #		Takes keys A and B, computes their tags, and returns the ordering
-#		of the tags using TupleCompare().
+#		of the tags using tuple_compare().
 #		"""
-#		TA = GetMonomialTag(A,self.symbolblocks)
-#		TB = GetMonomialTag(B,self.symbolblocks)
-#		return TupleCompare(TA,TB)
+#		TA = monomial_tag(A,self.symbolblocks)
+#		TB = monomial_tag(B,self.symbolblocks)
+#		return tuple_compare(TA,TB)
 #	
 ##===========================Power Counting============================#
 #	#Below, we generate all monomial countings consistent with the 
@@ -243,8 +243,8 @@ class Basis():
 #		sigs = {}
 ##		for key in tqdm(mlset.Mdict.keys()):
 #		for key in mlset.Mdict.keys():
-#			tag = GetMonomialTag(key,self.symbolblocks)
-#			sig = GetMonomialSignature(key,self.symbolblocks,True)
+#			tag = monomial_tag(key,self.symbolblocks)
+#			sig = monomial_signature(key,self.symbolblocks,True)
 #			sigs[key] = (tag,sig)
 #		
 #		simdict={}
@@ -255,7 +255,7 @@ class Basis():
 #		
 #		reducedmonomials=[]
 #		for sig in simdict:
-#			mintag = GetMinimalTag(simdict[sig].keys())
+#			mintag = minimal_tag(simdict[sig].keys())
 #			reducedmonomials.append(simdict[sig][mintag])
 #		
 #		basis = MRing({})
@@ -312,9 +312,9 @@ class Basis():
 #		#Next, replace forbidden pairs related into our minimal
 #		#basis by (p4.e4)=0, (p4.ebar4)=0, (p4.p4)=0.
 #		#FIXME: generalize! Don't hardcode!
-#		mr.PairReplacement({(-3,1):[[-1,(-2,-1)],[-1,(-3,-2)]]})
-#		mr.PairReplacement({(-3,4):[[-1,(-1,4)],[-1,(-2,4)]]})
-#		mr.PairReplacement({(-3,14):[[-1,(-1,14)],[-1,(-2,14)]]})
+#		mr.pair_replacement({(-3,1):[[-1,(-2,-1)],[-1,(-3,-2)]]})
+#		mr.pair_replacement({(-3,4):[[-1,(-1,4)],[-1,(-2,4)]]})
+#		mr.pair_replacement({(-3,14):[[-1,(-1,14)],[-1,(-2,14)]]})
 #		#Check that no forbidden pairs remain!
 #		for key in mr.Mdict.keys():
 #			for pair in key:

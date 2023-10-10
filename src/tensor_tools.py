@@ -6,7 +6,7 @@ from functools import reduce
 from tqdm import tqdm
 import sympy
 
-def SplitTensorSymbol(symbol):
+def split_tensor_symbol(symbol):
     symstring = symbol.__str__()
     assert "_{" in symstring, "Symbol does not represent a tensor!"
     indexblock = list(symstring.split('{')[1].split('}')[0])
@@ -31,14 +31,14 @@ def SplitTensorSymbol(symbol):
             indexstring+=char
     return head,prefixlist,indexlist
 
-def JoinTensorSymbol(head,indexblock):
+def join_tensor_symbol(head,indexblock):
     symstring=head+"{"+reduce(lambda x,y:x+y, [str(a)+str(b) for a,b in indexblock])+"}"
     return symbols(symstring)
 
-def SymbolGroupSort(symbol,symgroup):
-    head,prefixlist,indexlist = SplitTensorSymbol(symbol)
-    sorted_indexblock, sorting_permutations = symgroup.GroupSort(tuple(zip(prefixlist,indexlist)))
-    sorted_symbol = JoinTensorSymbol(head,sorted_indexblock)
+def symbol_group_sort(symbol,symgroup):
+    head,prefixlist,indexlist = split_tensor_symbol(symbol)
+    sorted_indexblock, sorting_permutations = symgroup.group_sort(tuple(zip(prefixlist,indexlist)))
+    sorted_symbol = join_tensor_symbol(head,sorted_indexblock)
 
     if type(sorting_permutations)==type([]):
         first_sign = sorting_permutations[0].sign
@@ -50,23 +50,23 @@ def SymbolGroupSort(symbol,symgroup):
     else:
         return sorted_symbol,sorting_permutations.sign
 
-def TensorIndexReplacement(q,source,target):
+def tensor_index_replacement(q,source,target):
     symbolmap = {}
     for symbol in list(q.free_symbols):
         if "_{" not in symbol.__str__():
             continue
-        head,prefixlist,indexlist = SplitTensorSymbol(symbol)
+        head,prefixlist,indexlist = split_tensor_symbol(symbol)
         pairs = zip(prefixlist,indexlist)
         if source in pairs:
             addresses = [i for i,x in enumerate(pairs) if x==source]
             for a in addresses:
                 pairs[a] = target
-        symbolmap[symbol] = JoinTensorSymbol(head,pairs)
+        symbolmap[symbol] = join_tensor_symbol(head,pairs)
     for source,target in symbolmap.items():
         q = q.subs(source,target)
     return q
 
-def IndexMatch(pattern, index, match):
+def index_match(pattern, index, match):
     if match=='prefix':
         return pattern[0]==index[0]
     elif match=='suffix':
@@ -76,31 +76,31 @@ def IndexMatch(pattern, index, match):
     else:
         assert False, "[match] argument must be one of prefix,suffix,index"
 
-def FirstMatchingIndex(poly,pattern,match):
+def first_matching_index(poly,pattern,match):
     #Need to trust that the expansion has been done properly in bound expansion.
     #For free expansion, all terms must have the same free indices, so
     #we only need to look at free_symbols for the whole poly.
     #assert len(poly.as_dict())==1, "Not a single term!"
     tensor_symbols = set(filter(lambda s: "_{" in s.__str__(),poly.free_symbols))
     for tensym in tensor_symbols:
-        heads,prefixes,suffixes = SplitTensorSymbol(tensym)
+        heads,prefixes,suffixes = split_tensor_symbol(tensym)
         for index in zip(prefixes,suffixes):
-            if IndexMatch(pattern,index,match):
+            if index_match(pattern,index,match):
                 return index
     return False
 
-def MatchingIndices(poly,pattern,match):
+def matching_indices(poly,pattern,match):
     assert len(poly.as_dict())==1, "Not a single term!"
     tensor_symbols = set(filter(lambda s: "_{" in s.__str__(),term.free_symbols))
     matching_indices =[]
     for tensym in tensor_symbols:
-        head,prefix,suffix = SplitTensorSymbol(tensym)
+        head,prefix,suffix = split_tensor_symbol(tensym)
         index = (prefix,suffix)
-        if IndexMatch(pattern,index,match):
+        if index_match(pattern,index,match):
             matching_indices.append(index)
     return matching_indices
 
-def TargetIndex(source_index,target,match):
+def target_index(source_index,target,match):
     if match=='prefix':
         if type(target)==type(str()):
             target_index = (target,source_index[1])

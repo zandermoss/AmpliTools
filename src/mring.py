@@ -8,12 +8,13 @@ from sympy.polys.polytools import div,compose
 from tqdm import tqdm
 import sympy
 from SignedPermutations import SignedPermutation, SignedPermutationGroup
-from TensorTools import SymbolGroupSort, SplitTensorSymbol, IndexMatch
-from TensorTools import FirstMatchingIndex, TargetIndex, MatchingIndices
+from tensor_tools import symbol_group_sort, split_tensor_symbol, index_match
+from tensor_tools import first_matching_index, target_index, matching_indices
 from functools import reduce
 
 
 class MRing():
+
 	def __init__(self,arg):
 		#Define mathtype
 		self.mathtype = "MRing"
@@ -23,60 +24,67 @@ class MRing():
 				polynomial = list(arg.values())[0]
 				pzero = Poly(0,polynomial.gens,domain='QQ_I')
 				#pzero = arg[arg.keys()[0]].zero
-			self.Mdict = {}
+			self.mdict = {}
 			for key in arg.keys():
-				sortedkey = self.KeySort(key)
-				self.Mdict.setdefault(sortedkey,pzero)
-				self.Mdict[sortedkey]+=arg[key]
-			self.CullZeros()
+				sortedkey = self.key_sort(key)
+				self.mdict.setdefault(sortedkey,pzero)
+				self.mdict[sortedkey]+=arg[key]
+			self.cull_zeros()
 		elif type(arg) == type(self) and arg.__class__.__name__ == self.__class__.__name__:
 			#Define the zero polynomial.
-			if len(arg.Mdict.keys())>0:
-				polynomial = list(arg.Mdict.values())[0]
+			if len(arg.mdict.keys())>0:
+				polynomial = list(arg.mdict.values())[0]
 				pzero = Poly(0,polynomial.gens,domain='QQ_I')
-				#pzero = arg.Mdict[arg.Mdict.keys()[0]].zero
-			self.Mdict = {}
-			for key in arg.Mdict.keys():
-				sortedkey = self.KeySort(key)
-				self.Mdict.setdefault(sortedkey,pzero)
-				self.Mdict[sortedkey]+=arg.Mdict[key]
-			self.CullZeros()
+				#pzero = arg.mdict[arg.mdict.keys()[0]].zero
+			self.mdict = {}
+			for key in arg.mdict.keys():
+				sortedkey = self.key_sort(key)
+				self.mdict.setdefault(sortedkey,pzero)
+				self.mdict[sortedkey]+=arg.mdict[key]
+			self.cull_zeros()
 		else:
 			sys.exit("Bad argument to MRing")
 
-	def One(self):
-		assert len(self.Mdict)>0, "MRing is empty!"
-		return MRing({((0,0),):self.PolyOne()})
 
-	def PolyOne(self):
-		polynomial = list(self.Mdict.values())[0]
+	def one(self):
+		assert len(self.mdict)>0, "MRing is empty!"
+		return MRing({((0,0),):self.poly_one()})
+
+
+	def poly_one(self):
+		polynomial = list(self.mdict.values())[0]
 		return Poly(1,polynomial.gens,domain='QQ_I')
 
-	def PolyZero(self):
-		polynomial = list(self.Mdict.values())[0]
+
+	def poly_zero(self):
+		polynomial = list(self.mdict.values())[0]
 		return Poly(0,polynomial.gens,domain='QQ_I')
 
-	def CullZeros(self):
-		for key in list(self.Mdict.keys()):
-			#Need second condition to get around strange bug.
-			#if self.Mdict[key].is_zero or self.Mdict[key].as_expr().__str__()=='0':
-			if self.Mdict[key].is_zero:
-				del self.Mdict[key]
 
-	def Compare(self,pair1,pair2):
+	def cull_zeros(self):
+		for key in list(self.mdict.keys()):
+			#Need second condition to get around strange bug.
+			#if self.mdict[key].is_zero or self.mdict[key].as_expr().__str__()=='0':
+			if self.mdict[key].is_zero:
+				del self.mdict[key]
+
+
+	def compare(self,pair1,pair2):
 		if pair1[0]!=pair2[0]:
 			return pair1[0]-pair2[0]
 		else:
 			return pair1[1]-pair2[1]
 
-	def KeySort(self,edge):
+
+	def key_sort(self,edge):
 		sortededge=[]
 		for pair in range(len(edge)):
 			sortededge.append(tuple(sorted(edge[pair])))
-		sortededge = sorted(sortededge,key=functools.cmp_to_key(self.Compare))
+		sortededge = sorted(sortededge,key=functools.cmp_to_key(self.compare))
 		return tuple(sortededge)
 
-	def LinearCoeffReplacementTargetKeys(self,key,mapkey,targets):
+
+	def linear_coefficient_replacement_target_keys(self,key,mapkey,targets):
 		active=[]
 		inert = list(key)
 		for pair in key:
@@ -100,11 +108,12 @@ class MRing():
 			for ltarget in ltargets:
 				plist = list(inert)+list(workactive)
 				plist.append(ltarget[1])
-				newkey = self.KeySort(tuple(plist))
+				newkey = self.key_sort(tuple(plist))
 				coefftargetkeys.append([ltarget[0],newkey])
 		return coefftargetkeys
 
-	def CoeffReplacementTargetKeys(self,key,mapkey,targets):
+
+	def coefficient_replacement_target_keys(self,key,mapkey,targets):
 		active=[]
 		inert = list(key)
 		for pair in key:
@@ -137,11 +146,12 @@ class MRing():
 				coeff*=el[0]
 				newplist.append(tuple(el[1]))
 			newplist+=inert
-			ptuple=self.KeySort(newplist)
+			ptuple=self.key_sort(newplist)
 			coefftargetkeys.append([coeff,ptuple])
 		return coefftargetkeys
 
-	def CoeffPairReplacementTargetKeys(self,key,mappair,targets):
+
+	def coefficient_pair_replacement_target_keys(self,key,mappair,targets):
 		images=[]
 		for pair in key:
 			if pair == mappair:
@@ -158,70 +168,80 @@ class MRing():
 			for el in plist:
 				coeff*=el[0]
 				newplist.append(tuple(el[1]))
-			ptuple=self.KeySort(newplist)
+			ptuple=self.key_sort(newplist)
 			coefftargetkeys.append([coeff,ptuple])
 		return coefftargetkeys
 
-	def PairReplacementRule(self,rmap):
+
+	def pair_replacement_rule(self,rmap):
 		newdict = {}
 		mappair = tuple(sorted(list(list(rmap.keys())[0])))
 		targets = rmap[list(rmap.keys())[0]]
-		for key in self.Mdict.keys():
-			coefftargetkeys = self.CoeffPairReplacementTargetKeys(key, mappair,targets)
+		for key in self.mdict.keys():
+			coefftargetkeys = self.coefficient_pair_replacement_target_keys(key, mappair,targets)
 			for coeff,targetkey in coefftargetkeys:
-				newdict.setdefault(targetkey,self.PolyZero())
-				newdict[targetkey]+=coeff*self.Mdict[key]
+				newdict.setdefault(targetkey,self.poly_zero())
+				newdict[targetkey]+=coeff*self.mdict[key]
 		return newdict
 
-	def ReplacementRule(self,rmap):
+
+	def replacement_rule(self,rmap):
 		newdict = {}
 		mapkey = list(rmap.keys())[0]
 		targets = rmap[mapkey]
-		for key in self.Mdict.keys():
-			coefftargetkeys = self.CoeffReplacementTargetKeys(key, mapkey,targets)
+		for key in self.mdict.keys():
+			coefftargetkeys = self.coefficient_replacement_target_keys(key, mapkey,targets)
 			for coeff,targetkey in coefftargetkeys:
-				newdict.setdefault(targetkey,self.PolyZero())
-				newdict[targetkey]+=coeff*self.Mdict[key]
+				newdict.setdefault(targetkey,self.poly_zero())
+				newdict[targetkey]+=coeff*self.mdict[key]
 		return newdict
 
-	def LinearReplacementRule(self,rmap):
+
+	def linear_replacement_rule(self,rmap):
 		newdict = {}
 		mapkey = list(rmap.keys())[0]
 		targets = rmap[mapkey]
-		for key in self.Mdict.keys():
-			coefftargetkeys = self.LinearCoeffReplacementTargetKeys(key, mapkey,targets)
+		for key in self.mdict.keys():
+			coefftargetkeys = self.linear_coefficient_replacement_target_keys(key, mapkey,
+                                                                     targets)
 			for coeff,targetkey in coefftargetkeys:
-				newdict.setdefault(targetkey,self.PolyZero())
-				newdict[targetkey]+=coeff*self.Mdict[key]
+				newdict.setdefault(targetkey,self.poly_zero())
+				newdict[targetkey]+=coeff*self.mdict[key]
 		return newdict
 
-	def Replacement(self,rmap):
+
+	def replacement(self,rmap):
 		r = MRing(self)
-		r.Mdict = r.ReplacementRule(rmap)
-		r.CullZeros()
+		r.mdict = r.replacement_rule(rmap)
+		r.cull_zeros()
 		return r
 
-	def LinearReplacement(self,rmap):
+
+	def linear_replacement(self,rmap):
 		r = MRing(self)
-		r.Mdict = r.LinearReplacementRule(rmap)
-		r.CullZeros()
+		r.mdict = r.linear_replacement_rule(rmap)
+		r.cull_zeros()
 		return r
 
-	def PairReplacement(self,rmap):
+
+	def pair_replacement(self,rmap):
 		r = MRing(self)
-		r.Mdict = r.PairReplacementRule(rmap)
-		r.CullZeros()
+		r.mdict = r.pair_replacement_rule(rmap)
+		r.cull_zeros()
 		return r
 
-	def ZeroPair(self,pair):
-		newdict = dict([entry for entry in self.Mdict.items() if pair not in entry[0]])
+
+	def zero_pair(self,pair):
+		newdict = dict([entry for entry in self.mdict.items() if pair not in entry[0]])
 		return MRing(newdict)
 
-	def ZeroIndex(self,index):
-		newdict = dict([entry for entry in self.Mdict.items() if index not in reduce(lambda x,y:x+y,entry[0])])
+
+	def zero_index(self,index):
+		newdict = dict([entry for entry in self.mdict.items() if index not in reduce(lambda x,y:x+y,entry[0])])
 		return MRing(newdict)
 
-	def BlockReplacement(self,blockmap,symbolblocks,source_prefix='f',target_prefix='f'):
+
+	def block_replacement(self,blockmap,symbolblocks,source_prefix='f',target_prefix='f'):
 		r = MRing(self)
 		#Check that inputs are OK.
 		assert len(symbolblocks) == len(blockmap)
@@ -244,20 +264,23 @@ class MRing():
 				map2[sym+1000] = 100+blockmap[sym-100]
 		#Send source to temp.
 		for source,temp in zip(map1.keys(),map1.values()):
-			r = r.Replacement({source:[[1,temp]]})
+			r = r.replacement({source:[[1,temp]]})
 		#Send temp to target.
 		for temp,target in zip(map2.keys(),map2.values()):
-			r = r.Replacement({temp:[[1,target]]})
+			r = r.replacement({temp:[[1,target]]})
 
-		# FIXME: handle cases in which TensorIndexReplacement returns empty MRing
+		# FIXME: handle cases in which tensor_index_replacement returns empty MRing
 		for source,temp in index_map1.items():
-			r = r.TensorIndexReplacement(source,temp,source_prefix=source_prefix,target_prefix=target_prefix)
+			r = r.tensor_index_replacement(source,temp,source_prefix=source_prefix,
+                                  target_prefix=target_prefix)
 		for temp,target in index_map2.items():
-			r = r.TensorIndexReplacement(temp,target,source_prefix=source_prefix,target_prefix=target_prefix)
+			r = r.tensor_index_replacement(temp,target,source_prefix=source_prefix,
+                                  target_prefix=target_prefix)
 
 		return r
 
-	def PolyTensorGetPrefixIndex(self, _p, prefix):
+
+	def poly_tensor_prefix_index(self, _p, prefix):
 		p = Poly(_p)
 		for	symbol in list(p.free_symbols):
 			symstring = symbol.__str__()
@@ -281,10 +304,11 @@ class MRing():
 					break
 		return False
 
-	def GetIndexDict(self):
+
+	def index_dict(self):
 		index_dict = {}
-		for poly in self.Mdict.values():
-			poly_index_dict = self.PolyGetIndexDict(poly)
+		for poly in self.mdict.values():
+			poly_index_dict = self.poly_index_dict(poly)
 			if len(poly_index_dict)==0:
 				continue
 			for prefix,index_set in poly_index_dict.items():
@@ -292,7 +316,8 @@ class MRing():
 				index_dict[prefix] = index_dict[prefix] | index_set
 		return index_dict
 
-	def PolyGetIndexDict(self,poly):
+
+	def poly_index_dict(self,poly):
 		index_dict = {}
 		for symbol in poly.free_symbols:
 			symstring = symbol.__str__()
@@ -316,7 +341,7 @@ class MRing():
 		return index_dict
 
 
-	def GetPTerms(self,p,domain='QQ_I'):
+	def p_terms(self,p,domain='QQ_I'):
 		pterms = []
 		for term in p.terms():
 			coeff = term[1]
@@ -327,7 +352,8 @@ class MRing():
 			pterms.append(pterm)
 		return pterms
 
-	def PolyGetBoundPrefixes(self,poly):
+
+	def poly_bound_prefixes(self,poly):
 		bound_prefixes = []
 		prefixes = []
 		for symbol in poly.free_symbols:
@@ -358,34 +384,39 @@ class MRing():
 			bound_prefixes.remove('y')
 		return bound_prefixes
 
-	def PolyCanonicalizeBoundIndices(self,poly):
+
+	def poly_canonize_bound_indices(self,poly):
 		new_poly = Poly(0,poly.gens,domain="QQ_I")
-		for pterm in self.GetPTerms(poly):
+		for pterm in self.p_terms(poly):
 			new_pterm = Poly(pterm)
-			bound_prefixes = self.PolyGetBoundPrefixes(pterm)
-			index_dict = self.PolyGetIndexDict(pterm)
+			bound_prefixes = self.poly_bound_prefixes(pterm)
+			index_dict = self.poly_index_dict(pterm)
 			for prefix in bound_prefixes:
 				for n,index in enumerate(list(index_dict[prefix])):
 					if index!=0:
-						new_pterm = self.PolyTensorIndexReplacement(new_pterm,index,n+1,source_prefix=prefix,target_prefix=prefix)
+						new_pterm = self.poly_tensor_index_replacement(new_pterm,
+                            index,n+1,source_prefix=prefix,target_prefix=prefix)
 			new_poly+=new_pterm
-		#FIXME: handle case in which PolyTensorIndexReplacement has returned only zeros.
+		#FIXME: handle case in which poly_tensor_index_replacement has returned only zeros.
 		return new_poly
 
-	def CanonicalizeBoundIndices(self):
+
+	def canonize_bound_indices(self):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key] = self.PolyCanonicalizeBoundIndices(r.Mdict[key])
+		for key in r.mdict.keys():
+			r.mdict[key] = self.poly_canonize_bound_indices(r.mdict[key])
 		return r
 
-	def TensorGetPrefixIndex(self, prefix):
-		for key in self.Mdict.keys():
-			index = self.PolyTensorGetPrefixIndex(self.Mdict[key],prefix)
+
+	def tensor_prefix_index(self, prefix):
+		for key in self.mdict.keys():
+			index = self.poly_tensor_prefix_index(self.mdict[key],prefix)
 			if index!=False:
 				return index
 		return False
 
-	def PolyTensorPrefixCheck(self, _p, prefix):
+
+	def poly_tensor_prefix_check(self, _p, prefix):
 		p = Poly(_p)
 		for	symbol in list(p.free_symbols):
 			symstring = symbol.__str__()
@@ -396,13 +427,15 @@ class MRing():
 				return True
 		return False
 
-	def TensorPrefixCheck(self, prefix):
-		for key in r.Mdict.keys():
-			if self.PolyTensorPrefixCheck(r.Mdict[key]):
+
+	def tensor_prefix_check(self, prefix):
+		for key in r.mdict.keys():
+			if self.poly_tensor_prefix_check(r.mdict[key]):
 				return True
 		return False
 
-	def PolyTensorPrefixReplacement(self, _p, source_prefix, target_prefix):
+
+	def poly_tensor_prefix_replacement(self, _p, source_prefix, target_prefix):
 		p = Poly(_p)
 		p = p.exclude()
 		#p = p.set_domain('QQ_I')
@@ -419,13 +452,17 @@ class MRing():
 
 		return p
 
-	def TensorPrefixReplacement(self, source_prefix, target_prefix):
+
+	def tensor_prefix_replacement(self, source_prefix, target_prefix):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key] = self.PolyTensorPrefixReplacement(r.Mdict[key],source_prefix,target_prefix)
+		for key in r.mdict.keys():
+			r.mdict[key] = self.poly_tensor_prefix_replacement(r.mdict[key],
+                                                      source_prefix,target_prefix)
 		return r
 
-	def PolyTensorIndexReplacement(self, _p, source, target, source_prefix='f', target_prefix='f'):
+
+	def poly_tensor_index_replacement(self, _p, source, target, source_prefix='f',
+                                        target_prefix='f'):
 		#FIXME: Had to comment out the checks here for compatibility with sagemath...
 		#assert type(source) == type(int(1))
 		#assert type(target) == type(int(1))
@@ -433,16 +470,16 @@ class MRing():
 		p=p.exclude()
 
 		if p == 0:
-			return self.PolyZero()
+			return self.poly_zero()
 		if p == 1:
-			return self.PolyOne()
+			return self.poly_one()
 
 		#p = p.set_domain('QQ_I')
 		#freesyms = list(p.free_symbols)
 		#freesyms = p.atoms(sympy.Symbol)
 		freesyms = list(p.gens)
 		for	symbol in freesyms:
-			# p = self.LoopiBoi(symbol, p,source,target,source_prefix,target_prefix)
+			# p = self.loopi_boi(symbol, p,source,target,source_prefix,target_prefix)
 			# if p == None:
 			#	 continue
 			symstring = symbol.__str__()
@@ -487,15 +524,16 @@ class MRing():
 
 
 		if p == 0:
-			return self.PolyZero()
+			return self.poly_zero()
 		if p == 1:
-			return self.PolyOne()
+			return self.poly_one()
 
 		p = Poly(p).set_domain('QQ_I')
 		#p = Poly(p)
 		return p
 
-	def LoopiBoi(self,symbol,p,source,target,source_prefix,target_prefix):
+
+	def loopi_boi(self,symbol,p,source,target,source_prefix,target_prefix):
 		symstring = symbol.__str__()
 		if "_{" not in symstring:
 			return None
@@ -538,48 +576,50 @@ class MRing():
 		p = p.subs(symbol,newsym)
 
 		if p == 0:
-			return self.PolyZero()
+			return self.poly_zero()
 		else:
 			#p = poly(p).set_domain('QQ_I')
 			pass
 		return p
 
-	def TensorIndexReplacement(self, source, target, source_prefix='f', target_prefix='f'):
-		r = MRing(self)
-		for key in list(r.Mdict.keys()):
-			replaced_poly = self.PolyTensorIndexReplacement(r.Mdict[key],source,target,source_prefix,target_prefix)
-			if replaced_poly.is_zero:
-				del r.Mdict[key]
-			else:
-				r.Mdict[key] = replaced_poly
 
-			# Returns MRing with empty Mdict if zero.
+	def tensor_index_replacement(self, source, target, source_prefix='f', target_prefix='f'):
+		r = MRing(self)
+		for key in list(r.mdict.keys()):
+			replaced_poly = self.poly_tensor_index_replacement(r.mdict[key],source,
+                                                      target,source_prefix,target_prefix)
+			if replaced_poly.is_zero:
+				del r.mdict[key]
+			else:
+				r.mdict[key] = replaced_poly
+
+			# Returns MRing with empty mdict if zero.
 
 			return r
 
 
-	def TensorProductReplacement(self, _source, _target):
+	def tensor_product_replacement(self, _source, _target):
 		#Prefix replacement for source and target:
-		source = self.PolyTensorPrefixReplacement(_source,'x','a')
-		source = self.PolyTensorPrefixReplacement(source,'y','c')
-		source = self.PolyTensorPrefixReplacement(source,'z','d')
-		source = self.PolyTensorPrefixReplacement(source,'w','g')
-		source = self.PolyTensorPrefixReplacement(source,'f','h')
-		source = self.PolyTensorPrefixReplacement(source,'b','k')
-		target = self.PolyTensorPrefixReplacement(_target,'x','a')
-		target = self.PolyTensorPrefixReplacement(target,'y','c')
-		target = self.PolyTensorPrefixReplacement(target,'z','d')
-		target = self.PolyTensorPrefixReplacement(target,'w','g')
-		target = self.PolyTensorPrefixReplacement(target,'f','h')
-		target = self.PolyTensorPrefixReplacement(target,'b','k')
+		source = self.poly_tensor_prefix_replacement(_source,'x','a')
+		source = self.poly_tensor_prefix_replacement(source,'y','c')
+		source = self.poly_tensor_prefix_replacement(source,'z','d')
+		source = self.poly_tensor_prefix_replacement(source,'w','g')
+		source = self.poly_tensor_prefix_replacement(source,'f','h')
+		source = self.poly_tensor_prefix_replacement(source,'b','k')
+		target = self.poly_tensor_prefix_replacement(_target,'x','a')
+		target = self.poly_tensor_prefix_replacement(target,'y','c')
+		target = self.poly_tensor_prefix_replacement(target,'z','d')
+		target = self.poly_tensor_prefix_replacement(target,'w','g')
+		target = self.poly_tensor_prefix_replacement(target,'f','h')
+		target = self.poly_tensor_prefix_replacement(target,'b','k')
 
 		#Unify domains and generators.
 		#source,target = source.unify(target)
 		r = MRing({})
 
-		#for key in tqdm(self.Mdict.keys(),desc="Tensor Product Replacements (key loop)"):
-		for key in self.Mdict.keys():
-			p = self.Mdict[key]
+		#for key in tqdm(self.mdict.keys(),desc="Tensor Product replacements (key loop)"):
+		for key in self.mdict.keys():
+			p = self.mdict[key]
 			p_dict = p.as_dict()
 			term_generators = p.gens
 			source_dict = source.as_dict()
@@ -587,25 +627,31 @@ class MRing():
 			assert len(source_dict)==1, "Source is not monomial."
 			source_term = list(source_dict.keys())[0]
 
-			#for term,coefficient in tqdm(p_dict.items(),desc="Tensor Product Replacements (poly loop)"):
+			#for term,coefficient in tqdm(p_dict.items(),desc="Tensor Product replacements (poly loop)"):
 			for term,coefficient in p_dict.items():
-				result = self.MatchTerm(term,term_generators,source_term,source_generators,0,{})
+				result = self.match_term(term,term_generators,source_term,
+                             source_generators,0,{})
 				if result==False:
 					target_term = Poly({tuple(term):coefficient},term_generators,domain="QQ_I")
 					ring_term = MRing({key:target_term})
 					r += ring_term
 				else:
 					stripped_term,xmap = result
-					target_term = Poly({tuple(stripped_term):coefficient},term_generators,domain="QQ_I")
+					target_term = Poly({tuple(stripped_term):coefficient},term_generators,
+                        domain="QQ_I")
 					target_term *= target
 					ring_term = MRing({key:target_term})
 					for source_pair,target_pair in xmap.items():
-						# FIXME: handle case in which TensorIndexReplacement returns zero.
-						ring_term = ring_term.TensorIndexReplacement(source_pair[1],target_pair[1],source_prefix = source_pair[0], target_prefix = target_pair[0])
+						# FIXME: handle case in which tensor_index_replacement returns zero.
+						ring_term = ring_term.tensor_index_replacement(source_pair[1],
+                            target_pair[1],source_prefix = source_pair[0],
+                            target_prefix = target_pair[0])
 					r += ring_term
 		return r
 
-	def MatchTerm(self,_term, term_generators, _source, source_generators, source_index, _xmap):
+
+	def match_term(self,_term, term_generators, _source, source_generators,
+                source_index, _xmap):
 		term = list(_term)
 		source = list(_source)
 		xmap = dict(_xmap)
@@ -616,7 +662,8 @@ class MRing():
 				return term,xmap
 			else:
 				source_index += 1
-				return self.MatchTerm(term,term_generators, source, source_generators, source_index, xmap)
+				return self.match_term(term,term_generators, source, source_generators,
+                           source_index, xmap)
 		else:
 			source_symbol = source_generators[source_index]
 			source[source_index] -= 1
@@ -627,21 +674,25 @@ class MRing():
 				term_index += 1
 				continue
 			for source_pair,target_pair in xmap.items():
-				# FIXME: doesn't handle case where PolyTensorIndexReplacement returns zero
-				source_poly = self.PolyTensorIndexReplacement(Poly({tuple(source):1},source_generators),source_pair[1],target_pair[1],source_prefix = source_pair[0], target_prefix = target_pair[0])
+				# FIXME: doesn't handle case where poly_tensor_index_replacement returns zero
+				source_poly = self.poly_tensor_index_replacement(Poly({tuple(source):1},
+                    source_generators),source_pair[1],target_pair[1],
+                    source_prefix = source_pair[0], target_prefix = target_pair[0])
 				source = list(source_poly.as_dict().keys())[0]
 			term_symbol = term_generators[term_index]
-			symbol_xmap = self.MatchSymbols(term_symbol,source_symbol)
+			symbol_xmap = self.match_symbols(term_symbol,source_symbol)
 			if symbol_xmap != False:
 				term[term_index] -= 1
 				xmap.update(symbol_xmap)
 				"MATCHTERM: RECURSE"
-				return self.MatchTerm(term,term_generators,source,source_generators,source_index,xmap)
+				return self.match_term(term,term_generators,source,source_generators,
+                           source_index,xmap)
 			else:
 				term_index+=1
 		return False
 
-	def GetHeadIndices(self,symbol,prefixes):
+
+	def head_indices(self,symbol,prefixes):
 		symstring = symbol.__str__()
 		if "_{" not in symstring:
 			return False
@@ -661,21 +712,22 @@ class MRing():
 			indices.append((prefix,int(numstring)))
 		return head,indices
 
-	def MatchSymbols(self,term_symbol,source_symbol):
+
+	def match_symbols(self,term_symbol,source_symbol):
 		free_term_prefixes = ['x','y','f']
 		bound_term_prefixes = ['z','w','b']
 		free_source_prefixes = ['a','c','h']
 		bound_source_prefixes = ['d','g','k']
 		prefixes = free_term_prefixes + bound_term_prefixes + free_source_prefixes + bound_source_prefixes
 		#FIXME: kludge here to avoid scalar matching.
-		#term_head,term_indices = self.GetHeadIndices(term_symbol,prefixes)
-		term_ghi_result = self.GetHeadIndices(term_symbol,prefixes)
+		#term_head,term_indices = self.head_indices(term_symbol,prefixes)
+		term_ghi_result = self.head_indices(term_symbol,prefixes)
 		if term_ghi_result==False:
 			return False
 		term_head,term_indices = term_ghi_result
 
-		#source_head,source_indices = self.GetHeadIndices(source_symbol,prefixes)
-		source_ghi_result = self.GetHeadIndices(source_symbol,prefixes)
+		#source_head,source_indices = self.head_indices(source_symbol,prefixes)
+		source_ghi_result = self.head_indices(source_symbol,prefixes)
 		if source_ghi_result==False:
 			return False
 		source_head,source_indices = source_ghi_result
@@ -765,73 +817,78 @@ class MRing():
 
 		return symbol_xmap
 
-	def DeltaContract(self,deltahead):
+
+	def contract_deltas(self,deltahead):
 		""" This should be called only on MRing elements belonging to a single
 			graph. There might be index redundancy otherwise! """
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			p = r.Mdict[key]
+		for key in r.mdict.keys():
+			p = r.mdict[key]
 			psymbols = list(p.free_symbols)
 			delta_symbols = [sym for sym in psymbols if deltahead in sym.__str__()]
 			for delta_sym in delta_symbols:
 				indices = (delta_sym.__str__()).split('f')[1:3]
 				indices = [index.strip('}') for index in indices]
-				r = r.EvaluatePoly(delta_sym,1)
-				# FIXME: handle case in which TensorIndexReplacement returns empty?
-				r = r.TensorIndexReplacement(int(indices[1]),int(indices[0]))
+				r = r.evaluate_poly(delta_sym,1)
+				# FIXME: handle case in which tensor_index_replacement returns empty?
+				r = r.tensor_index_replacement(int(indices[1]),int(indices[0]))
 		return r
 
-	def EvaluateDelta(self,deltahead = "D_"):
+
+	def evaluate_deltas(self,deltahead = "D_"):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			p = r.Mdict[key]
+		for key in r.mdict.keys():
+			p = r.mdict[key]
 			psymbols = list(p.free_symbols)
 			delta_symbols = [sym for sym in psymbols if deltahead in sym.__str__()]
 			for delta_sym in delta_symbols:
-				head,prefixes,indices = SplitTensorSymbol(delta_sym)
+				head,prefixes,indices = split_tensor_symbol(delta_sym)
 				assert len(prefixes)==2, "Delta should have two indices!"
 				if (prefixes[0]==prefixes[1] and indices[0]==indices[1]):
-					r = r.EvaluatePoly(delta_sym,1)
+					r = r.evaluate_poly(delta_sym,1)
 				else:
-					r = r.EvaluatePoly(delta_sym,0)
+					r = r.evaluate_poly(delta_sym,0)
 		return r
 
-	def EvaluateProjector(self,projhead,subspace_prefix):
+
+	def evaluate_projector(self,projhead,subspace_prefix):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			p = r.Mdict[key]
+		for key in r.mdict.keys():
+			p = r.mdict[key]
 			psymbols = list(p.free_symbols)
 			proj_symbols = [sym for sym in psymbols if projhead in sym.__str__()]
 			for proj_sym in proj_symbols:
-				head,prefixes,indices = SplitTensorSymbol(proj_sym)
+				head,prefixes,indices = split_tensor_symbol(proj_sym)
 				assert len(prefixes)==2, "Projector should have two indices!"
 				if (prefixes[0]==prefixes[1] and indices[0]==indices[1]
 					and prefixes[0]==subspace_prefix):
-					r = r.EvaluatePoly(proj_sym,1)
+					r = r.evaluate_poly(proj_sym,1)
 				else:
-					r = r.EvaluatePoly(proj_sym,0)
+					r = r.evaluate_poly(proj_sym,0)
 		return r
 
 
-	def SetDomain(self,domain='QQ_I'):
+	def set_domain(self,domain='QQ_I'):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key] = r.Mdict[key].set_domain(domain)
+		for key in r.mdict.keys():
+			r.mdict[key] = r.mdict[key].set_domain(domain)
 		return r
 
-	def SortGenerators(self):
+
+	def sort_generators(self):
 		r = MRing(self)
-		for key,p in r.Mdict.items():
-			r.Mdict[key] = p.reorder(*sorted(p.gens,key=str))
+		for key,p in r.mdict.items():
+			r.mdict[key] = p.reorder(*sorted(p.gens,key=str))
 		return r
 
-	def CleanDummyIndices(self):
+
+	def clean_dummy_indices(self):
 		""" This should be called only on MRing elements belonging to a single
 			graph. There might be index redundancy otherwise! """
 		r = MRing(self)
-		for key in r.Mdict.keys():
+		for key in r.mdict.keys():
 			replacements = {}
-			p = r.Mdict[key]
+			p = r.mdict[key]
 			pstring = (p.as_expr()).__str__()
 			terms = pstring.split(' ')
 			for term in terms:
@@ -865,15 +922,15 @@ class MRing():
 					target_string = target_string.replace('f'+str(index),'b'+str(num))
 				target_poly = poly(symbols(target_string),symbols(target_string),domain='QQ_I')
 				replacements[sym] = target_poly
-				q = compose(r.Mdict[key],target_poly,sym)
-				newsymbols =  set(list(r.Mdict[key].free_symbols)+list(target_poly.free_symbols))
+				q = compose(r.mdict[key],target_poly,sym)
+				newsymbols =  set(list(r.mdict[key].free_symbols)+list(target_poly.free_symbols))
 				q = poly(q.as_expr(),newsymbols,domain='QQ_I')
 				q = q.exclude()
-				r.Mdict[key] = poly(q,domain='QQ_I')
+				r.mdict[key] = poly(q,domain='QQ_I')
 		return r
 
 
-	def SortSymbol(self,symbol,op_indices):
+	def sort_symbol(self,symbol,op_indices):
 		symstring = symbol.__str__()
 		indexblock = list(symstring.split('{')[1].split('}')[0])
 		prefix = symstring.split('{')[0]
@@ -968,57 +1025,57 @@ class MRing():
 #		return symbols(newstring),symbol_sign
 
 
-#	def SortSymmetricIndices(self,tensor_symmetries):
+#	def sort_indices(self,tensor_symmetries):
 #		symbolmap = {}
 #		for tensorhead, oplist in tensor_symmetries.items():
 #			op_indices = {}
 #			for i,op in enumerate(oplist):
 #				op_indices.setdefault(op,[])
 #				op_indices[op].append(i)
-#			for mkey,q in self.Mdict.items():
+#			for mkey,q in self.mdict.items():
 #				for freesym in list(q.free_symbols):
 #					symstring = freesym.__str__()
 #					if "_{" not in symstring:
 #						continue
 #					if tensorhead in freesym.__str__():
-#						sorted_freesym = self.SortSymbol(freesym,op_indices)
+#						sorted_freesym = self.sort_symbol(freesym,op_indices)
 #						symbolmap[freesym] = sorted_freesym
 #		mr = MRing(self)
 #		for source,target in symbolmap.items():
-#			#mr = mr.ReplReplacement(source,target)
-#			mr = mr.SymbolReplacement(source,target)
+#			#mr = mr.repl_replacement(source,target)
+#			mr = mr.replace_symbol(source,target)
 #		return mr
 
 
-	def SortSymmetricIndices(self,symbol_groups):
+	def sort_indices(self,symbol_groups):
         #print("IN Kernel SSI")
 		symbolmap = {}
         #for i in tqdm([1,],desc="BuildMap"):
 		for head,symgroup in symbol_groups.items():
                 #print("Head: {},Symgroup: {}".format(head,symgroup))
-			for mkey,q in self.Mdict.items():
+			for mkey,q in self.mdict.items():
 				for freesym in list(q.free_symbols):
 					symstring = freesym.__str__()
 					if "_{" not in symstring:
 						continue
 					if head in freesym.__str__():
-						symbolmap[freesym] = SymbolGroupSort(freesym,symgroup)
+						symbolmap[freesym] = symbol_group_sort(freesym,symgroup)
         #print("Done buildmap")
         #for i in tqdm([1,],desc="Copy"):
 		mr = MRing(self)
         #print("Done copy")
-        #for source,target in tqdm(symbolmap.items(),desc="SymbolReplacement"):
+        #for source,target in tqdm(symbolmap.items(),desc="replace_symbol"):
 		for source,target in symbolmap.items():
-			mr = mr.SymbolReplacement(source,target)
+			mr = mr.replace_symbol(source,target)
 		return mr
 
 
-	def SymbolReplacement(self,source,target):
+	def replace_symbol(self,source,target):
 		target_symbol,sign = target
 		r = MRing(self)
-		keys = list(r.Mdict.keys())
+		keys = list(r.mdict.keys())
 		for key in keys:
-			generators = r.Mdict[key].gens
+			generators = r.mdict[key].gens
 			if type(generators)==None:
 				continue
 			if target_symbol==0:
@@ -1027,72 +1084,78 @@ class MRing():
 				genlist = list(generators)
 				genlist.append(target_symbol)
 				new_generators = tuple(set(genlist))
-			p = r.Mdict[key].subs(source,sign*target_symbol)
+			p = r.mdict[key].subs(source,sign*target_symbol)
 			if p.is_zero:
-				del r.Mdict[key]
+				del r.mdict[key]
 			else:
-				r.Mdict[key] = poly(p,new_generators,domain='QQ_I')
+				r.mdict[key] = poly(p,new_generators,domain='QQ_I')
 		return r
 
-	def ReplReplacement(self,source,target):
+
+	def repl_replacement(self,source,target):
 		#FIXME: edit in place?
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			p = r.Mdict[key].exclude()
+		for key in r.mdict.keys():
+			p = r.mdict[key].exclude()
 			#p = p.set_domain('QQ_I')
 			if p.is_ground:
 				continue
 			condition = source in p.gens
 			if condition:
 				p = p.replace(source,target)
-				r.Mdict[key] = p.set_domain('QQ_I')
+				r.mdict[key] = p.set_domain('QQ_I')
 		return r
 
-	def MonomialReplacement(self,monomial,target_poly):
+
+	def replace_monomial(self,monomial,target_poly):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			if str(r.Mdict[key].as_expr())=="1":
+		for key in r.mdict.keys():
+			if str(r.mdict[key].as_expr())=="1":
 				continue
-			elif str(r.Mdict[key].as_expr())=="0":
+			elif str(r.mdict[key].as_expr())=="0":
 				continue
-			p = compose(r.Mdict[key],target_poly,monomial)
-			newsymbols =  set(list(r.Mdict[key].free_symbols)+list(target_poly.free_symbols))
+			p = compose(r.mdict[key],target_poly,monomial)
+			newsymbols =  set(list(r.mdict[key].free_symbols)+list(target_poly.free_symbols))
 			p = poly(p.as_expr(),newsymbols,domain='QQ_I')
 			p = p.exclude()
-			r.Mdict[key] = poly(p,domain='QQ_I')
+			r.mdict[key] = poly(p,domain='QQ_I')
 		return r
 
-	def FactorPolynomials(self):
+
+	def factor_polynomials(self):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key] = factor(r.Mdict[key])
+		for key in r.mdict.keys():
+			r.mdict[key] = factor(r.mdict[key])
 		return r
 
-	def SimplifyPolynomials(self):
+
+	def simplify_polynomials(self):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key] = simplify(r.Mdict[key])
+		for key in r.mdict.keys():
+			r.mdict[key] = simplify(r.mdict[key])
 		return r
 
-	def UnifyGenerators(self,ext_poly=None):
-		if len(self.Mdict.keys())==0:
+
+	def unify_generators(self,ext_poly=None):
+		if len(self.mdict.keys())==0:
 			return MRing(self),None
 		if ext_poly==None:
-			upoly = list(self.Mdict.values())[0].zero
+			upoly = list(self.mdict.values())[0].zero
 		else:
 			upoly = ext_poly
 
-		for key in self.Mdict.keys():
-			upoly = (upoly.unify(self.Mdict[key]))[0]
+		for key in self.mdict.keys():
+			upoly = (upoly.unify(self.mdict[key]))[0]
 
 		newdict = {}
-		for key in self.Mdict.keys():
-			newdict[key] = (upoly.unify(self.Mdict[key]))[1]
+		for key in self.mdict.keys():
+			newdict[key] = (upoly.unify(self.mdict[key]))[1]
 		r = MRing({})
-		r.Mdict = newdict
+		r.mdict = newdict
 		return r,upoly
 
-	def FuseDict(self,dictA,dictB):
+
+	def fuse_dict(self,dictA,dictB):
 		"""
 		Check that there are no redundant labels. That will
 		screw everything up!
@@ -1114,10 +1177,11 @@ class MRing():
 					sumkey = [k for k in sumkey if k!=(0,0)]
 				else:
 					sumkey = [(0,0)]
-				targetkey = self.KeySort(tuple(sumkey))
-				newdict.setdefault(targetkey,self.PolyZero())
+				targetkey = self.key_sort(tuple(sumkey))
+				newdict.setdefault(targetkey,self.poly_zero())
 				newdict[targetkey]+=dictA[keyA]*dictB[keyB]
 		return newdict
+
 
 	def __mul__(self,other):
 		dummy = symbols('dummy')
@@ -1127,24 +1191,25 @@ class MRing():
 		is_sympy_number = ("sympy.core" in str(type(other)))
 		assert (type(other) in domain_types) or is_sympy_number or (type(other) == type(self))
 		if type(other) == type(self) and other.__class__.__name__ == self.__class__.__name__:
-			product = MRing(self.FuseDict(self.Mdict,other.Mdict))
+			product = MRing(self.fuse_dict(self.mdict,other.mdict))
 		elif ((type(other) in domain_types) or is_sympy_number):
 			prod_dict = {}
-			for key in self.Mdict.keys():
-				prod_dict[key] = self.Mdict[key]*other
+			for key in self.mdict.keys():
+				prod_dict[key] = self.mdict[key]*other
 			product = MRing(prod_dict)
-			product.CullZeros()
-		#product,upoly = product.UnifyGenerators()
+			product.cull_zeros()
+		#product,upoly = product.unify_generators()
 		return product
+
 
 	def __pow__(self,power):
 		assert type(power)==int
 		assert power>=0
-		if self.IsEmpty():
+		if self.is_empty():
 			return MRing(self)
 		if power==0:
-			#return MRing({((0,0),):self.Mdict[self.Mdict.keys()[0]].one})
-			return self.One()
+			#return MRing({((0,0),):self.mdict[self.mdict.keys()[0]].one})
+			return self.one()
 		if power==1:
 			return MRing(self)
 		product = MRing(self)
@@ -1152,7 +1217,8 @@ class MRing():
 			product*=self
 		return product
 
-	def LinkReduce(self,key,linkpair):
+
+	def link_reduce(self,key,linkpair):
 		#------------Sort------------#
 		activeA = [pair for pair in key if (bool(set([linkpair[0]])&set(pair)) and not bool(set([linkpair[1]])&set(pair)))]
 		activeB = [pair for pair in key if (bool(set([linkpair[1]])&set(pair)) and not bool(set([linkpair[0]])&set(pair)))]
@@ -1179,110 +1245,121 @@ class MRing():
 		contraction = tuple(contraction)
 
 		accumulator += activeA+activeB+[contraction]
-		accumulator = self.LinkReduce(accumulator,linkpair)
+		accumulator = self.link_reduce(accumulator,linkpair)
 		return accumulator
 
-	def Link(self,linkpairs):
+
+	def link(self,linkpairs):
 		r = MRing(self)
 		D = symbols('D')
 		Dp = poly(D,D,domain = 'QQ_I')
 		for linkpair in linkpairs:
 			rloop = MRing({})
-			for key in r.Mdict.keys():
+			for key in r.mdict.keys():
 				#Do an initial round of sorting to speed up the recursion
 				inert = [pair for pair in key if not bool(set(linkpair)&set(pair))]
 				active = [pair for pair in key if bool(set(linkpair)&set(pair))]
-				accumulator = self.LinkReduce(active,linkpair)
+				accumulator = self.link_reduce(active,linkpair)
 				workingkey = accumulator+inert
 				activeAB = [pair for pair in workingkey if (bool(set([linkpair[0]])&set(pair)) and bool(set([linkpair[1]])&set(pair)))]
 				Nloops = len(activeAB)
 				cleanworkingkey = [pair for pair in workingkey if not bool(set(linkpair)&set(pair))]
-				finalkey = self.KeySort(cleanworkingkey)
-				rloop.QuickAdd(MRing({finalkey:r.Mdict[key]*(Dp**Nloops)}))
-			rloop.CullZeros()
+				finalkey = self.key_sort(cleanworkingkey)
+				rloop.quick_add(MRing({finalkey:r.mdict[key]*(Dp**Nloops)}))
+			rloop.cull_zeros()
 			r = MRing(rloop)
 		return r
 
-	def QuickAdd(self,other):
+
+	def quick_add(self,other):
 		#Doesn't cull zeros. Unsafe, but can save time if this
 		#is run in a loop, so long as we remember to cull zeros afterwards.
-		for key in other.Mdict.keys():
-			self.Mdict.setdefault(key,other.PolyZero())
-			self.Mdict[key]+=other.Mdict[key]
+		for key in other.mdict.keys():
+			self.mdict.setdefault(key,other.poly_zero())
+			self.mdict[key]+=other.mdict[key]
+
 
 	def __add__(self,other):
 		assert other.mathtype == "MRing"
 		sum_dict = {}
-		if len(self.Mdict.keys())>0:
-			for key in self.Mdict.keys():
-				sum_dict.setdefault(key,self.PolyZero())
-				sum_dict[key] += self.Mdict[key]
-		if len(other.Mdict.keys())>0:
-			for key in other.Mdict.keys():
-				sum_dict.setdefault(key,other.PolyZero())
-				sum_dict[key] += other.Mdict[key]
+		if len(self.mdict.keys())>0:
+			for key in self.mdict.keys():
+				sum_dict.setdefault(key,self.poly_zero())
+				sum_dict[key] += self.mdict[key]
+		if len(other.mdict.keys())>0:
+			for key in other.mdict.keys():
+				sum_dict.setdefault(key,other.poly_zero())
+				sum_dict[key] += other.mdict[key]
 		mysum = MRing(sum_dict)
-		#mysum,upoly = mysum.UnifyGenerators()
-		mysum.CullZeros()
+		#mysum,upoly = mysum.unify_generators()
+		mysum.cull_zeros()
 		return mysum
 
-	def AddInPlace(self,other,cull=False):
+
+	def add_in_place(self,other,cull=False):
 		assert other.mathtype == "MRing"
-		if len(other.Mdict.keys())>0:
-			for key in other.Mdict.keys():
-				self.Mdict.setdefault(key,other.PolyZero())
-				self.Mdict[key] += other.Mdict[key]
-		#mysum,upoly = mysum.UnifyGenerators()
+		if len(other.mdict.keys())>0:
+			for key in other.mdict.keys():
+				self.mdict.setdefault(key,other.poly_zero())
+				self.mdict[key] += other.mdict[key]
+		#mysum,upoly = mysum.unify_generators()
 		if cull:
-			self.CullZeros()
+			self.cull_zeros()
+
 
 	def __sub__(self,other):
 		return self+other*(-1)
 
-	def PartialDerivative(self, monomial):
+
+	def partial_derivative(self, monomial):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key]*=poly(1,monomial,domain='QQ_I')
-			r.Mdict[key] = r.Mdict[key].diff(monomial)
-		r.CullZeros()
+		for key in r.mdict.keys():
+			r.mdict[key]*=poly(1,monomial,domain='QQ_I')
+			r.mdict[key] = r.mdict[key].diff(monomial)
+		r.cull_zeros()
 		return r
+
 
 	def __str__(self):
-		sorted_keys = sorted(self.Mdict.keys())
+		sorted_keys = sorted(self.mdict.keys())
 		string = ''
 		for key in sorted_keys:
-			polydict = self.Mdict[key].terms
-			string += str(key)+" :"+(self.Mdict[key].as_expr()).__str__()+'\n'
+			polydict = self.mdict[key].terms
+			string += str(key)+" :"+(self.mdict[key].as_expr()).__str__()+'\n'
 		return string
 
-	def FullStr(self):
-		sorted_keys = sorted(self.Mdict.keys())
+
+	def full_string(self):
+		sorted_keys = sorted(self.mdict.keys())
 		string = ''
 		for key in sorted_keys:
-			polydict = self.Mdict[key].terms
-			string += str(key)+" :"+(self.Mdict[key]).__str__()+'\n'
+			polydict = self.mdict[key].terms
+			string += str(key)+" :"+(self.mdict[key]).__str__()+'\n'
 		return string
+
 
 	def Print(self):
-		sorted_keys = sorted(self.Mdict.keys())
+		sorted_keys = sorted(self.mdict.keys())
 		for key in sorted_keys:
-			polydict = self.Mdict[key].terms
+			polydict = self.mdict[key].terms
 			print(str(key)+" :")
-			print(self.Mdict[key])
+			print(self.mdict[key])
 			print()
 
-	def EvaluatePoly(self,var,value):
+
+	def evaluate_poly(self,var,value):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			my_symbols = r.Mdict[key].gens
-			r.Mdict[key]*=poly(1,var,domain='QQ_I')
-			r.Mdict[key] = poly(r.Mdict[key].eval(var,value),my_symbols,domain='QQ_I')
-		r.CullZeros()
+		for key in r.mdict.keys():
+			my_symbols = r.mdict[key].gens
+			r.mdict[key]*=poly(1,var,domain='QQ_I')
+			r.mdict[key] = poly(r.mdict[key].eval(var,value),my_symbols,domain='QQ_I')
+		r.cull_zeros()
 		return r
 
-	def Proportional(self,other):
-		A = self.Mdict
-		B = other.Mdict
+
+	def proportional(self,other):
+		A = self.mdict
+		B = other.mdict
 		if set(A.keys())!=set(B.keys()):
 			return False
 		for k,key in enumerate(A.keys()):
@@ -1294,9 +1371,10 @@ class MRing():
 				return False
 		return True
 
+
 	def __eq__(self,other):
-		A = self.Mdict
-		B = other.Mdict
+		A = self.mdict
+		B = other.mdict
 		if set(A.keys())!=set(B.keys()):
 			return False
 		for key in A.keys():
@@ -1307,10 +1385,10 @@ class MRing():
 		return True
 
 
-	#FIXME: Removed all the UnifyGenerators!! Does this cause trouble?
+	#FIXME: Removed all the unify_generators!! Does this cause trouble?
 #	def __eq__(self,other):
 #		diff = self-other
-#		return diff.IsEmpty()
+#		return diff.is_empty()
 
 	def __ne__(self,other):
 		return not self.__eq__(other)
@@ -1322,26 +1400,28 @@ class MRing():
 	def __hash__(self):
 		#Hash "recursively" by stacking (key,hash(Poly)) tuples sorted by key.
 		hashlist = []
-		for key in sorted(self.Mdict.keys()):
+		for key in sorted(self.mdict.keys()):
 			#Remove extraneous generators.
-			#self.Mdict[key] = self.Mdict[key].exclude()
-			#self.Mdict[key] = self.Mdict[key].set_domain('QQ_I')
+			#self.mdict[key] = self.mdict[key].exclude()
+			#self.mdict[key] = self.mdict[key].set_domain('QQ_I')
 			#Need to hash the Poly *as an expr*. Otherwise, the ordering of
 			#Terms and products in the polynomial will depend on orderings
 			#of generators, which is a disaster.
-			hashlist.append((key.__hash__(),(self.Mdict[key].as_expr()).__hash__()))
+			hashlist.append((key.__hash__(),(self.mdict[key].as_expr()).__hash__()))
 		return hash(tuple(hashlist))
 
-	def IsEmpty(self):
-		if len(self.Mdict.keys())==0:
+
+	def is_empty(self):
+		if len(self.mdict.keys())==0:
 			return True
 		else:
 			return False
 
-	def GetPowerCounting(self):
+
+	def power_counting(self):
 		last_count=[0,0,0]
 		first = True
-		for key in self.Mdict.keys():
+		for key in self.mdict.keys():
 			count = [0,0,0]
 			for pair in key:
 				for el in pair:
@@ -1359,10 +1439,11 @@ class MRing():
 			last_count=list(count)
 		return count
 
-	def DressMomentumPairs(self,symbol,longitudinal_modes):
+
+	def dress_momentum_pairs(self,symbol,longitudinal_modes):
 		#FIXME: handle non-scalar cases!
 		r = MRing(self)
-		for key in r.Mdict.keys():
+		for key in r.mdict.keys():
 			paircount = 0
 			for pair in key:
 				if pair[0]!=pair[1]:
@@ -1371,64 +1452,70 @@ class MRing():
 							paircount+=1
 						if i in longitudinal_modes:
 							paircount+=1
-			r.Mdict[key]*=poly(symbol**paircount,symbol,domain='QQ_I')
+			r.mdict[key]*=poly(symbol**paircount,symbol,domain='QQ_I')
 		return r
 
-	def DressMomentum(self,symbol,index):
+
+	def dress_momentum(self,symbol,index):
 		#FIXME: handle non-scalar cases!
 		r = MRing(self)
-		for key in r.Mdict.keys():
+		for key in r.mdict.keys():
 			paircount = 0
 			for pair in key:
 				if pair[0]!=pair[1]:
 					for i in pair:
 						if i<0 and -i==index:
 							paircount+=1
-			r.Mdict[key]*=poly(symbol**paircount,symbol,domain='QQ_I')
+			r.mdict[key]*=poly(symbol**paircount,symbol,domain='QQ_I')
 		return r
 
-	def GetFreeSymbols(self):
+
+	def free_symbols(self):
 		"""
 		Returns a set of all free symbols appearing in all polynomial values
-		of `MRing.Mdict`.
+		of `MRing.mdict`.
 		"""
 		return reduce(lambda s,t: s|t,
-					  [set(p.free_symbols) for p in self.Mdict.values()])
+					  [set(p.free_symbols) for p in self.mdict.values()])
 
-	def GetTensorSymbols(self):
+
+	def tensor_symbols(self):
 		"""
 		Returns a `set` of all tensor symbols appearing in all polynomials
 		First computes set of all free symbols using
-		`MRing.GetFreeSymbols()`, then filters out all symbols without
+		`MRing.free_symbols()`, then filters out all symbols without
 		"_{" characters, indicative of a tensor index block.
 		"""
-		return set(filter(lambda s: "_{" in s.__str__(),self.GetFreeSymbols()))
+		return set(filter(lambda s: "_{" in s.__str__(),self.free_symbols()))
 
-	def FindPrefix(self,prefix_key):
+
+	def find_prefix(self,prefix_key):
 		"""
 		Searches all polynomials for tensors containing `prefix`.
 		Returns a list of all indices carrying this prefix.
 		"""
-		tensor_symbols = self.GetTensorSymbols()
+		tensor_symbols = self.tensor_symbols()
 		keyed_indices = set()
 		for tensym in tensor_symbols:
-			head,prefix,index = SplitTensorSymbol(tensym)
+			head,prefix,index = split_tensor_symbol(tensym)
 			keyed_indices |= {index[i] for i,v in enumerate(prefix)
 							 if v==prefix_key}
 		keyed_indices = sorted(list(keyed_indices))
 		return keyed_indices
 
-	def BoundIndicesToComponents(self,
+
+	def bound_indices_to_components(self,
 									 first,
 									 last,
 									 bound_prefix='b',
 									 target_prefix='x'):
 		r = MRing(self)
-		for key in r.Mdict.keys():
-			r.Mdict[key] = self.PolyBoundIndicesToComponents(r.Mdict[key],first,last,bound_prefix,target_prefix)
+		for key in r.mdict.keys():
+			r.mdict[key] = self.poly_bound_indices_to_components(r.mdict[key],first,last,bound_prefix,target_prefix)
 		return r
 
-	def PolyBoundIndicesToComponents(self,poly,
+
+	def poly_bound_indices_to_components(self,poly,
 								 first,
 								 last,
 								 bound_prefix='b',
@@ -1436,13 +1523,13 @@ class MRing():
 
 		target_poly = poly*0
 
-		for pterm in self.GetPTerms(poly):
+		for pterm in self.p_terms(poly):
 			term = Poly(pterm)
 
 			tensor_symbols = set(filter(lambda s: "_{" in s.__str__(),term.free_symbols))
 			bound_indices = set()
 			for tensym in tensor_symbols:
-				head,prefix,index = SplitTensorSymbol(tensym)
+				head,prefix,index = split_tensor_symbol(tensym)
 				bound_indices |= {index[i] for i,v in enumerate(prefix)
 								  if v==bound_prefix}
 
@@ -1453,15 +1540,17 @@ class MRing():
 				bound_index = list(bound_indices)[0]
 				target_term = term*0
 				for target_index in range(first, last+1):
-					target_term += self.PolyTensorIndexReplacement(term,
+					target_term += self.poly_tensor_index_replacement(term,
 													bound_index,
 													target_index,
 													source_prefix=bound_prefix,
 													target_prefix=target_prefix)
-				target_poly += self.PolyBoundIndicesToComponents(target_term,first,last,bound_prefix,target_prefix)
+				target_poly += self.poly_bound_indices_to_components(target_term,first,
+                                                         last,bound_prefix,target_prefix)
 		return target_poly
 
-	def ExpandBoundIndex(self,pattern,targets,match):
+
+	def expand_bound_index(self,pattern,targets,match):
 		"""
 		Prefixes in target indices must all differ from source prefix!
 		Otherwise, the recursion will never terminate.
@@ -1480,38 +1569,39 @@ class MRing():
 
 		assert pattern not in targets, "Pattern in targets, recursion will never terminate!"
 
-		return self.BranchBoundIndex(pattern,targets,match)
+		return self.branch_bound_index(pattern,targets,match)
 
-	def BranchBoundIndex(self,pattern,targets,match):
+
+	def branch_bound_index(self,pattern,targets,match):
 		target_mring = MRing({})
-		for key,poly in self.Mdict.items():
-			for pterm in self.GetPTerms(poly):
-				pattern_index = FirstMatchingIndex(poly,pattern,match)
+		for key,poly in self.mdict.items():
+			for pterm in self.p_terms(poly):
+				pattern_index = first_matching_index(poly,pattern,match)
 				if pattern_index==False:
 					target_mring += MRing({key:poly})
 				else:
 					working_mring = MRing({})
 					for target in targets:
-						target_index = TargetIndex(pattern_index,target,match)
-						working_mring+=MRing({key:poly}).TensorIndexReplacement(
+						target_index = target_index(pattern_index,target,match)
+						working_mring+=MRing({key:poly}).tensor_index_replacement(
 												pattern_index[1],target_index[1],
 												source_prefix=pattern_index[0],
 												target_prefix=target_index[0])
-					target_mring += working_mring.BranchBoundIndex(pattern,
+					target_mring += working_mring.branch_bound_index(pattern,
 																  targets,match)
 		return target_mring
 
 
-#	def MatchingIndices(self,pattern,match):
+#	def matching_indices(self,pattern,match):
 #		matching_indices = set()
-#		for key,poly in self.Mdict.values():
-#			for pterm in self.GetPTerms(poly):
-#				matching_indices |= MatchingIndices(poly,pattern,match)
+#		for key,poly in self.mdict.values():
+#			for pterm in self.p_terms(poly):
+#				matching_indices |= matching_indices(poly,pattern,match)
 #		return matching_indices
 
 #-------------------Functions--------------------#
 
-def Join(_A,Alegs,_B,Blegs,pair,_bridge,rank=1):
+def join(_A,Alegs,_B,Blegs,pair,_bridge,rank=1):
 	"""
 	This function joins a pair [_A,_B] of MRings along a pair of legs [pair].
 	They are joined "across" an MRing object [_bridge], which plays the role
@@ -1553,9 +1643,9 @@ def Join(_A,Alegs,_B,Blegs,pair,_bridge,rank=1):
 	#		Bmap[Blegs[(Blegs.index(pair[1])+i)%nB]+100]=i+nA+99
 
 	Ablocks = [[-i,i,i+100] for i in Alegs]
-	A = A.BlockReplacement(Amap,Ablocks)
+	A = A.block_replacement(Amap,Ablocks)
 	Bblocks = [[-i,i,i+100] for i in Blegs]
-	B = B.BlockReplacement(Bmap,Bblocks)
+	B = B.block_replacement(Bmap,Bblocks)
 
 	bridge = MRing(_bridge)
 	#bridge.ZeroPadEnd(A.GetPolyLength()-1)
@@ -1565,28 +1655,30 @@ def Join(_A,Alegs,_B,Blegs,pair,_bridge,rank=1):
 	#	bridgemap[101]=Astar+101
 	#	bridgemap[102]=Bstar+101
 	bridgeblocks = [[-1,1,101],[-2,2,102]]
-	bridge = bridge.BlockReplacement(bridgemap,bridgeblocks)
+	bridge = bridge.block_replacement(bridgemap,bridgeblocks)
 
-	C = A.Fuse(B.Fuse(bridge))
-	C = C.Link([[Astar,Astar+1],])
-	C = C.Link([[Bstar,Bstar+1],])
+	C = A.fuse(B.fuse(bridge))
+	C = C.link([[Astar,Astar+1],])
+	C = C.link([[Bstar,Bstar+1],])
 	if rank==2:
-		C = C.Link([[Astar+100,Astar+101],[Bstar+100,Bstar+101]])
-	C = C.Replacement({-Astar:[[-1,-i] for i in range(1,nA)]})
-	C = C.Replacement({-Bstar:[[1,-i] for i in range(1,nA)]})
+		C = C.link([[Astar+100,Astar+101],[Bstar+100,Bstar+101]])
+	C = C.replacement({-Astar:[[-1,-i] for i in range(1,nA)]})
+	C = C.replacement({-Bstar:[[1,-i] for i in range(1,nA)]})
 
 	s = MRing({((-200,-200),):Poly({(0,):Rational(1)})})
-	s = s.Replacement({-200:[[1,-i] for i in range(1,nA)]})
+	s = s.replacement({-200:[[1,-i] for i in range(1,nA)]})
 
 	return C,s
 
-def Shelve(r,symbolblocks,filename):
+
+def shelve(r,symbolblocks,filename):
 	shelf = shelve.open(filename)
 	shelf['r'] = r
 	shelf['symbolblocks'] = symbolblocks
 	shelf.close()
 
-def UnShelve(filename):
+
+def unshelve(filename):
 	shelf = shelve.open(filename)
 	r = shelf['r']
 	symbolblocks = shelf['symbolblocks']

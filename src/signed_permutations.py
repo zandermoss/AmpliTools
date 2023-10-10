@@ -12,7 +12,7 @@ class SignedPermutation():
         """
         return len(self.permlist)
 
-    def ID(self):
+    def identity(self):
         """
         Return the identity permutation of appropriate length.
         """
@@ -20,7 +20,7 @@ class SignedPermutation():
         sign = 1
         return SignedPermutation(permlist,sign)
 
-    def Permute(self,_iterable):
+    def permute(self,_iterable):
         """
         Apply permutation (disregarding sign) to iterable [_iterable], return as list.
         """
@@ -34,7 +34,7 @@ class SignedPermutation():
         composition of permutations, this product returns:
           			(self)o(other)
         """
-        permlist = self.Permute(other.permlist)
+        permlist = self.permute(other.permlist)
         #permlist = [other.permlist[x-1] for x in self.permlist]
         sign = self.sign*other.sign
         return SignedPermutation(permlist,sign)
@@ -45,7 +45,7 @@ class SignedPermutation():
     def __eq__(self,other):
         return (self.permlist==other.permlist and self.sign==other.sign)
 
-    def Inverse(self):
+    def inverse(self):
         """
         Return the inverse of the self permutation. The sign remains the same.
         """
@@ -53,7 +53,7 @@ class SignedPermutation():
         sign = self.sign
         return SignedPermutation(permlist,sign)
 
-    def Cycles(self):
+    def cycles(self):
         """
         Returns the cycle decomposition of self.
         [cycles] is a tuple of tuples, each of which is a cycle of the
@@ -74,7 +74,7 @@ class SignedPermutation():
             cycles.append(tuple(cycle))
         return cycles
 
-    def Parity(self):
+    def parity(self):
         """
         Constructs the parity of a permutation by counting cycles.
         Don't confuse the parity of a signed permutation with the
@@ -84,13 +84,14 @@ class SignedPermutation():
         a permutation.
         """
         sign = 1
-        for c in self.Cycles():
+        for c in self.cycles():
             sign*= (-1)**(len(c)-1)
         return sign
 
+
 class SignedPermutationGroup():
 
-    def Generate(self,element):
+    def generate(self,element):
         for generator in self.generators:
             next_element = generator*element
             if tuple(next_element.permlist) in self.perm_sign_dict.keys():
@@ -98,7 +99,7 @@ class SignedPermutationGroup():
                 assert next_element.sign == self.perm_sign_dict[tuple(next_element.permlist)]
             else:
                 self.perm_sign_dict[tuple(next_element.permlist)] = next_element.sign
-                self.Generate(next_element)
+                self.generate(next_element)
         return
 
     def __init__(self,generators):
@@ -108,16 +109,16 @@ class SignedPermutationGroup():
         The group is stored as a dictionary {permlist:sign}.
         Note: the order of any generator with negative size must be even!
         Otherwise, we will generate the same permutation with both signs.
-        The assertion in Generate() will catch this case.
+        The assertion in generate() will catch this case.
         """
         self.generators = generators
         self.perm_sign_dict = {}
-        self.Generate(generators[0].ID())
+        self.generate(generators[0].identity())
 
     def __len__(self):
         return len(self.perm_sign_dict)
 
-    def PermLen(self):
+    def permlen(self):
         return len(list(self.perm_sign_dict.keys())[0])
 
     def __str__(self):
@@ -129,7 +130,7 @@ class SignedPermutationGroup():
     def __eq__(self,other):
         return self.perm_sign_dict==other.perm_sign_dict
 
-    def GroupSort(self,ituple):
+    def group_sort(self,ituple):
         """
         This function solves a problem in which we are given a list of signed
         permutations and a tuple of strings (which are an ordered set relative
@@ -166,10 +167,10 @@ class SignedPermutationGroup():
         best sorts ituple. This is possible if ituple has redundancies.
         """
 
-        assert len(ituple) == self.PermLen(), "Mismatch in tuple and permutation lengths!"
+        assert len(ituple) == self.permlen(), "Mismatch in tuple and permutation lengths!"
 
         tuple_perm_dict = {}
-        #Generate the list of group-sorted ituples.
+        #generate the list of group-sorted ituples.
         for permlist in self.perm_sign_dict.keys():
             tuple_image = tuple([ituple[x-1] for x in permlist])
             tuple_perm_dict.setdefault(tuple_image,[])

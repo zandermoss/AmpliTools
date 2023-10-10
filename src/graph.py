@@ -1,16 +1,16 @@
 import itertools
 import networkx as nx
 from networkx.algorithms import isomorphism
-from MRational import MRational
-from MRing import MRing
+from mrational import MRational
+from mring import MRing
 from sympy import *
 from tqdm import tqdm
-from Interface import DrawNXGraphList
+from interface import draw_graphs
 from hashable_containers import hmap, hlist, HMultiGraph
 from nautypy import canonize_multigraph
 
 
-def GraphCopy(graph):
+def graph_copy(graph):
     #G = nx.Graph()
     G = HMultiGraph()
     for node in graph.nodes:
@@ -30,7 +30,7 @@ def GraphCopy(graph):
     return G
 
 
-def PropCopy(propagator):
+def propagator_copy(propagator):
     prop = {}
     for ptype, mrational in propagator.items():
         prop[ptype] = MRational(mrational)
@@ -44,8 +44,8 @@ class Diagram(object):
         arg = _arg[1:]
         if len(arg) == 1 and type(arg[0]) == type(self):
             other = arg[0]
-            self.G = GraphCopy(other.G)
-            self.propagators = PropCopy(other.propagators)
+            self.G = graph_copy(other.G)
+            self.propagators = propagator_copy(other.propagators)
             self.valent_nodes = {}
             for key, val in other.valent_nodes.items():
                 self.valent_nodes[key] = list(val)
@@ -59,17 +59,17 @@ class Diagram(object):
               and isinstance(arg[0], HMultiGraph)
               # and type(arg[1]) == type(dict())):
               and isinstance(arg[1], dict)):
-            self.G = GraphCopy(arg[0])
-            self.propagators = PropCopy(arg[1])
+            self.G = graph_copy(arg[0])
+            self.propagators = propagator_copy(arg[1])
             self.valent_nodes = {}
             self.connected_valent_nodes = {}
-            self.CollectValentNodes()
+            self.collect_valent_nodes()
             self.count = 1
         else:
             assert False, "Bad Argument to Diagram.__init__()"
 
-    def CollectValentNodes(self):
-        """ Collect labels of nodes with unbound operators
+    def collect_valent_nodes(self):
+        """ collect labels of nodes with unbound operators
             and index them by particle type. """
         nodes = self.G.nodes
         self.valent_nodes = {}
@@ -87,8 +87,8 @@ class Diagram(object):
             return Diagram(HMultiGraph(nx.union(self.G, other.G)), propagators)
         else:
             # Assume integer labels and stabilize self.G labels.
-            G = GraphCopy(self.G)
-            H = nx.convert_node_labels_to_integers(GraphCopy(other.G),
+            G = graph_copy(self.G)
+            H = nx.convert_node_labels_to_integers(graph_copy(other.G),
                                                    first_label=max(G.nodes)+1)
             return Diagram(HMultiGraph(nx.union(G, H)), propagators)
 
@@ -96,10 +96,10 @@ class Diagram(object):
         assert type(self) == type(other)
         # Assume integer labels and stabilize self.G labels.
         # G = nx.convert_node_labels_to_integers(self.G)
-        G = GraphCopy(self.G)
+        G = graph_copy(self.G)
         GD = Diagram(G, self.propagators)
         H = nx.convert_node_labels_to_integers(
-            GraphCopy(other.G), first_label=max(G.nodes)+1)
+            graph_copy(other.G), first_label=max(G.nodes)+1)
         HD = Diagram(H, other.propagators)
         products = []
         ptypes = (set(GD.valent_nodes.keys()).intersection(
@@ -142,27 +142,27 @@ class Diagram(object):
         string += "\n"
         return string
 
-    def ComputeMRational(self, root_node, delta_head="ID_"):
+    def compute_mrational(self, root_node, delta_head="ID_"):
         # Get first rational.
         nodes = self.G.nodes
         neighbors = list(self.G[root_node].keys())
         assert len(neighbors) == 1
         neighbor = neighbors[0]
-        rat, plist, label_counter = self.Burrow(neighbor,
+        rat, plist, label_counter = self.burrow(neighbor,
                                                 root_node,
                                                 len(nodes))
         rat = rat.DeltaContract(delta_head)
         # rat = rat.CleanDummyIndices()
-        # rat = rat.CanonicalizeIndices()
+        # rat = rat.canonize_indices()
         return rat
 
-    def Burrow(self, node, parent, label_counter):
+    def burrow(self, node, parent, label_counter):
         """ Depth-first recursion for constructing
             an MRational expression from a diagram. """
         nodes = self.G.nodes
         edges = self.G.edges
 
-        # FIXME: initialize label_counter at initial call of Burrow
+        # FIXME: initialize label_counter at initial call of burrow
         # FIXME: assign *symmetrized* vertex expressions to the vertices.
         rat = MRational(nodes[node]['mrational'])
         multiplicity = nodes[node]['multiplicity']
@@ -173,9 +173,9 @@ class Diagram(object):
         for i in range(1, multiplicity+1):
             label_counter += 1
             index_map[label_counter] = oplist[i-1]
-            rat = rat.KinematicReplacement({i: [[1, label_counter], ]})
-            rat = rat.KinematicReplacement({-i: [[1, -label_counter], ]})
-            rat = rat.TensorIndexReplacement(i, label_counter)
+            rat = rat.kinematic_replacement({i: [[1, label_counter], ]})
+            rat = rat.kinematic_replacement({-i: [[1, -label_counter], ]})
+            rat = rat.tensor_index_replacement(i, label_counter)
 
         # Isolate the parent index.
         keys = list(index_map.keys())
@@ -196,38 +196,38 @@ class Diagram(object):
             neighbor_label = nodes[neighbor]['ext_label']
             # Leaf Case
             if neighbor_label is not None:
-                rat = rat.KinematicReplacement({first_index: [[1,
+                rat = rat.kinematic_replacement({first_index: [[1,
                                                 neighbor_label], ]})
-                rat = rat.KinematicReplacement({-first_index: [[1,
+                rat = rat.kinematic_replacement({-first_index: [[1,
                                                 -neighbor_label], ]})
-                rat = rat.TensorIndexReplacement(first_index, neighbor_label)
+                rat = rat.tensor_index_replacement(first_index, neighbor_label)
                 downstream_labels += [neighbor_label, ]
             # Generic Case
             else:
-                r, labels, label_counter = self.Burrow(neighbor,
+                r, labels, label_counter = self.burrow(neighbor,
                                                        node,
                                                        label_counter)
                 downstream_labels += labels
-                rat = rat.KinematicReplacement({-first_index: [[1, -label]
+                rat = rat.kinematic_replacement({-first_index: [[1, -label]
                                                 for label in labels]})
-                rat = rat.TensorIndexReplacement(first_index, label_counter)
+                rat = rat.tensor_index_replacement(first_index, label_counter)
                 rat *= r
-                rat = rat.Link([[first_index, label_counter], ])
+                rat = rat.link([[first_index, label_counter], ])
 
         # Upstream work
         parent_label = nodes[parent]['ext_label']
 
         # Root Case
         if parent_label is not None:
-            rat = rat.KinematicReplacement({parent_index: [[1,
+            rat = rat.kinematic_replacement({parent_index: [[1,
                                             parent_label], ]})
-            rat = rat.TensorIndexReplacement(parent_index, parent_label)
+            rat = rat.tensor_index_replacement(parent_index, parent_label)
             # Don't eliminate p_n yet. Need it for permutation.
             # elimination by way of momentum conservation will happen
             # *after* orbit in the onshell code.
-            # rat = rat.KinematicReplacement({-parent_index:[[-1,-label]
+            # rat = rat.kinematic_replacement({-parent_index:[[-1,-label]
             # for label in downstream_labels]})
-            rat = rat.KinematicReplacement({-parent_index: [[1,
+            rat = rat.kinematic_replacement({-parent_index: [[1,
                                             -parent_label], ]})
         # Generic Case
         else:
@@ -236,11 +236,11 @@ class Diagram(object):
                                                    parent]['ptype']]
             label_counter += 1
             propagator_index_1 = label_counter
-            upstream_propagator = upstream_propagator.KinematicReplacement(
+            upstream_propagator = upstream_propagator.kinematic_replacement(
                                         {-1: [[1, -propagator_index_1], ]})
-            upstream_propagator = upstream_propagator.KinematicReplacement(
+            upstream_propagator = upstream_propagator.kinematic_replacement(
                                         {1: [[1, propagator_index_1], ]})
-            upstream_propagator = upstream_propagator.TensorIndexReplacement(
+            upstream_propagator = upstream_propagator.tensor_index_replacement(
                                         1, propagator_index_1)
 
             label_counter += 1
@@ -248,24 +248,24 @@ class Diagram(object):
             # Note: the propagator should not depend on momentum label 2,
             # only on 1. Just in case there is dependence on both labels,
             # we'll do a second replacement with the opposite sign.
-            upstream_propagator = upstream_propagator.KinematicReplacement(
+            upstream_propagator = upstream_propagator.kinematic_replacement(
                                         {-2: [[1, -propagator_index_2], ]})
-            upstream_propagator = upstream_propagator.KinematicReplacement(
+            upstream_propagator = upstream_propagator.kinematic_replacement(
                                         {2: [[1, propagator_index_2], ]})
-            upstream_propagator = upstream_propagator.TensorIndexReplacement(
+            upstream_propagator = upstream_propagator.tensor_index_replacement(
                                         2, propagator_index_2)
 
             # Product
             rat *= upstream_propagator
-            # Link indices.
-            rat = rat.Link([[parent_index, propagator_index_1], ])
-            rat = rat.TensorIndexReplacement(parent_index, propagator_index_1)
+            # link indices.
+            rat = rat.link([[parent_index, propagator_index_1], ])
+            rat = rat.tensor_index_replacement(parent_index, propagator_index_1)
             # Replace momenta with appropriate signs.
-            rat = rat.KinematicReplacement({-parent_index: [[-1, -label]
+            rat = rat.kinematic_replacement({-parent_index: [[-1, -label]
                                             for label in downstream_labels]})
-            rat = rat.KinematicReplacement({-propagator_index_1: [[1, -label]
+            rat = rat.kinematic_replacement({-propagator_index_1: [[1, -label]
                                             for label in downstream_labels]})
-            rat = rat.KinematicReplacement({-propagator_index_2: [[-1, -label]
+            rat = rat.kinematic_replacement({-propagator_index_2: [[-1, -label]
                                             for label in downstream_labels]})
 
         return rat, downstream_labels, label_counter
@@ -277,13 +277,13 @@ class DRing(object):
     def __init__(self, diagrams):
         self.diagrams = diagrams
 
-    def ComputeMRational(self, root_node, delta_head="ID_"):
+    def compute_mrational(self, root_node, delta_head="ID_"):
         # Get first rational.
-        rat = self.diagrams[0].GetMRational(root_node, delta_head)
+        rat = self.diagrams[0].get_mrational(root_node, delta_head)
         # Compute the rest and sum up.
         for i in tqdm(range(1, len(self.diagrams)),
                       desc="Computing Rationals"):
-            rat += self.diagrams[i].GetMRational(root_node, delta_head)
+            rat += self.diagrams[i].get_mrational(root_node, delta_head)
         return rat
 
     def __add__(self, other):
@@ -418,13 +418,13 @@ class DRing(object):
     #     return full_iso_dict
 
 
-def LabelsToExt(self,g):
+def labels_to_ext(self,g):
     return hmap({l:g.nodes[l]['ext_label'] for l in g.nodes if g.nodes[l]['ext_label'] != None})
 
-def IsomapToExt(self,isomap,labels_to_ext):
+def isomap_to_ext(self,isomap,labels_to_ext):
     return hmap({labels_to_ext[l]:labels_to_ext[isomap[l]] for l in labels_to_ext})
 
-def IsomorphismClassification(diagrams):
+def isomorphism_classification(diagrams):
     """
     For each diagram's graph (g), there exists a canonical labeling (g_canon)
     which is related to (g) by a node label permutation (s_g).
@@ -436,13 +436,13 @@ def IsomorphismClassification(diagrams):
     The canonical permutation (s_g) thus acts on rat(g_canon) by a restricted permuation
     of the external leg labels (s_g_ext).
 
-    We could compute rat(g) for every graph spat out by the SuperGraphDFS algorithm, but 
+    We could compute rat(g) for every graph spat out by the supergraph_dfs algorithm, but 
     we would waste time doing unnecessary rational algebra. Instead, we will 'bin' the 
-    graphs (g) from SuperGraphDFS by their canonizations (g_canon) and the associated
+    graphs (g) from supergraph_dfs by their canonizations (g_canon) and the associated
     external label permutation (s_g_ext) into a nested hmap structure (classes). 
 
     To construct the amplitude, we step through the keys of (classes) and call
-    Diagram.ComputeMRational *only once* per isomorphism class. For each (s_g_ext)
+    Diagram.compute_mrational *only once* per isomorphism class. For each (s_g_ext)
     in classes[g_canon], we compute s_g_ext(rat(g_canon)), multiply it by the number of
     times the associated diagram appears (classes[g_canon][s_g_ext]), and add the
     result to the amplitude.
@@ -456,12 +456,12 @@ def IsomorphismClassification(diagrams):
     [doi:10.2307/1969046]. 
 
     An additional improvement to this approach would see canonization used
-    as a pruning technique in the SuperGraphDFS algorithm to reduce the number
+    as a pruning technique in the supergraph_dfs algorithm to reduce the number
     of contractions constructed by binning "online". Empirically, constructing
     and manipulating rational expressions appears to take much longer than 
     generating graphs from contractions, so we'll punt that optimization.
 
-    IsomorphismClassification constructs an hmap (classes) keyed by canonically
+    isomorphism_classification constructs an hmap (classes) keyed by canonically
     labeled graphs and valued by hmaps, which themselves are keyed by external label
     permutations (s_g_ext) and valued by integer counts for the corresponding isomorph.
     """
@@ -515,10 +515,10 @@ def IsomorphismClassification(diagrams):
         g_canonical, autgens, isomap_from_canon = canonize_multigraph(d.G)
 
         #Compute label -> ext_label map for g_canonical and cache.
-        labels_to_ext.setdefault(g_canonical,self.LabelsToExt(g_canonical))
+        labels_to_ext.setdefault(g_canonical,self.labels_to_ext(g_canonical))
 
         #Compute isomap -> ext_isomap for d.G
-        ext_isomap = self.IsomapToExt(isomap_from_canon,labels_to_ext[g_canonical])
+        ext_isomap = self.isomap_to_ext(isomap_from_canon,labels_to_ext[g_canonical])
 
         #Initialize and increment the entry for [g_canonical][ext_isomap] in classes.
         classes.setdefault(g_canonical,hmap())
@@ -528,7 +528,7 @@ def IsomorphismClassification(diagrams):
     return classes
 
 
-def SuperGraphDFS(diagram, node):
+def supergraph_dfs(diagram, node):
     # FIXME: need a sensible docstring
     unbound_opmap = diagram.G.nodes[node]['unbound_opmap']
     ptypes = unbound_opmap.keys()
@@ -585,14 +585,14 @@ def SuperGraphDFS(diagram, node):
 
         # Recurse
         else:
-            diagram_list += SuperGraphDFS(
+            diagram_list += supergraph_dfs(
                     next_diagram,
                     list(next_diagram.connected_valent_nodes.values())[0][0])
 
     return diagram_list
 
 
-def ComputeContractions(vertices, propagators, external_legs, tensor_symmetries):
+def compute_contractions(vertices, propagators, external_legs, tensor_symmetries):
     print("IN CC")
     # FIXME: need a sensible docstring
     # Grab the identity polynomials from a propagator
@@ -662,7 +662,7 @@ def ComputeContractions(vertices, propagators, external_legs, tensor_symmetries)
         seed_diagram += Diagram(external_list[i], propagators)
     #for i in tqdm([1,],desc="Contractions"):
     print("Before SGDFS")
-    diagrams = SuperGraphDFS(seed_diagram,
+    diagrams = supergraph_dfs(seed_diagram,
                     list(seed_diagram.G.nodes.keys())[0])
     print("After SGDFS")
 
@@ -691,12 +691,12 @@ def ComputeContractions(vertices, propagators, external_legs, tensor_symmetries)
     # 	int_iso_dict = iso.BinInternalIsomorphism(DR)
     # print "INTISODICT"
     # for key,val in int_iso_dict.items():
-    # 	DrawNXGraphList([key,],waittime=2)
+    # 	draw_graphs([key,],waittime=2)
     # 	print Diagram(key,propagators)
     # print "LEN INTISODICT: ",len(int_iso_dict)
     #for i in tqdm([1, ], desc="Isomorphism Classification"):
     print ("Before IC")
-    classes = IsomorphismClassification(diagrams)
+    classes = isomorphism_classification(diagrams)
     print ("After IC")
     #    classes = ClassifyFullIsomorphism(diagrams)
 
@@ -705,17 +705,17 @@ def ComputeContractions(vertices, propagators, external_legs, tensor_symmetries)
     contraction_sum = MRational(rat_zero)
     # for key,value in tqdm(ext_iso_dict.items(),desc="Computing MRationals"):
     for g_canon, isomaps in classes.items():
-        DrawNXGraphList([g_canon, ], waittime=2)
+        draw_graphs([g_canon, ], waittime=2)
         d_canon = Diagram(g_canon, propagators)
         # print key_diagram
         #for i in tqdm([1, ], desc="Construct MRational Expression"):
-        rat_canon = d_canon.ComputeMRational(root_label)
+        rat_canon = d_canon.compute_mrational(root_label)
         #for i in tqdm([1, ], desc="Canonicalize Tensor Indices"):
-        rat_canon = rat_canon.CanonicalizeIndices(len(external_legs))
+        rat_canon = rat_canon.canonize_indices(len(external_legs))
         #for i in tqdm([1, ], desc="Sort Symmetric Tensor Indices"):
-        rat_canon = rat_canon.SortSymmetricIndices(tensor_symmetries)
-        #for i in tqdm([1, ], desc="Collect Terms"):
-        rat_canon = rat_canon.Collect()
+        rat_canon = rat_canon.sort_indices(tensor_symmetries)
+        #for i in tqdm([1, ], desc="collect Terms"):
+        rat_canon = rat_canon.collect()
 
         #coefficient = value[0]
         #for blockmap in tqdm(value[1], desc="External Label Permutations"):
@@ -729,7 +729,7 @@ def ComputeContractions(vertices, propagators, external_legs, tensor_symmetries)
     return contraction_sum
 
 
-def UTaylorSeries(symbol_list, g_order):
+def evolution_expansion(symbol_list, g_order):
     # Compute the taylor series of the time evolution operator U
     # to order [g_order] in the perturbative parameter g, as well
     # as a set of operator coefficients, all of which are contained
@@ -742,7 +742,7 @@ def UTaylorSeries(symbol_list, g_order):
     return U_series
 
 
-def ComputeTreeAmplitude(interactions,
+def compute_tree_amplitude(interactions,
                          propagators,
                          external_legs,
                          tensor_symmetries):
@@ -799,7 +799,7 @@ def ComputeTreeAmplitude(interactions,
     # sorted in g_ordered_interactions above.
     g = symbols('g')
     symbol_list = [g, ]+[symbols("O_"+str(i)) for i in range(1, g_order+1)]
-    U_series = UTaylorSeries(symbol_list, g_order)
+    U_series = evolution_expansion(symbol_list, g_order)
 
     # Extract the coefficient of the g^g_order term.
     tree_term = U_series.coeff(g**g_order).as_poly(domain='QQ_I')
@@ -849,22 +849,22 @@ def ComputeTreeAmplitude(interactions,
         # amplitude.
 
         # For the time being, we'll do the isomorphism reductions in
-        # ComputeContractions.
-        print("BEFORE ComputeContractions")
+        # compute_contractions.
+        print("BEFORE compute_contractions")
         for vertices in vertex_lists:
             # print "----------__VERTEXSET__---------"
             # print vertices
-            diagram = ComputeContractions(vertices,
+            diagram = compute_contractions(vertices,
                                           propagators,
                                           external_legs,
                                           tensor_symmetries)
             diagram *= coefficient
             amplitude += diagram
-        print("done ComputeContractions")
+        print("done compute_contractions")
         #for i in tqdm([1, ], desc="SORTING"):
-        amplitude = amplitude.SortSymmetricIndices(tensor_symmetries)
+        amplitude = amplitude.sort_indices(tensor_symmetries)
         #for i in tqdm([1, ], desc="AMPCOLLECT"):
-        amplitude = amplitude.Collect()
+        amplitude = amplitude.collect()
         print("\n\n\n")
 
 # 	print "DIAGRAM"
@@ -879,7 +879,7 @@ def ComputeTreeAmplitude(interactions,
 # 	delta = delta.GroupMasses({(symbols('m_1'),):symbols('m_{i1}')})
 # 	delta = delta.GroupMasses({(symbols('m_2'),):symbols('m_{i2}')})
 # 	delta = delta.GroupMasses({(symbols('m_3'),):symbols('m_{i3}')})
-# 	delta = delta.Collect()
+# 	delta = delta.collect()
 # 	print delta
 # 	print "-------------------------------"
 # 	print

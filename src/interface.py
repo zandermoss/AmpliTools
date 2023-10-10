@@ -1,5 +1,5 @@
-from MRing import MRing
-from MRational import MRational
+from mring import MRing
+from mrational import MRational
 from sympy import *
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -7,51 +7,30 @@ from IPython.display import Markdown, display, clear_output, Math
 from functools import cmp_to_key
 import time
 import math
-from PermutationTools import SymmetricPartitionPerms
-from SignedPermutations import SignedPermutationGroup, SignedPermutation
+from permutation_tools import symmetric_partition_permutations
+from signed_permutations import SignedPermutationGroup, SignedPermutation
 import re
 
 
 class Interface(object):
-    def __init__(self,momentum_symbols,polarization_symbols,coefficient_symbols,coefficient_display_map):
+    def __init__(self,momentum_symbols,polarization_symbols,coefficient_symbols,
+                 coefficient_display_map):
         #Sort symbols
         self.coefficient_display_map = coefficient_display_map
-        self.momentum_symbols = tuple(sorted(momentum_symbols,key=cmp_to_key(lambda x,y:x.compare(y))))
-        self.polarization_symbols = tuple(sorted(polarization_symbols,key=cmp_to_key(lambda x,y:x.compare(y))))
-        self.coefficient_symbols = tuple(sorted(coefficient_symbols,key=cmp_to_key(lambda x,y:x.compare(y))))
+        self.momentum_symbols = tuple(sorted(momentum_symbols,
+                                             key=cmp_to_key(lambda x,y:x.compare(y))))
+        self.polarization_symbols = tuple(sorted(polarization_symbols,
+                                                 key=cmp_to_key(lambda x,y:x.compare(y))))
+        self.coefficient_symbols = tuple(sorted(coefficient_symbols,
+                                                key=cmp_to_key(lambda x,y:x.compare(y))))
 
-    def IndexGtZero(self,mylist):
+    def index_gt_zero(self,mylist):
         for n in range(len(mylist)):
             if mylist[n]>0:
                 return n
 
-    # def ExprToMRing(self,expr):
-    #     #Bring momenta to the front
-    #     allsymbols = self.momentum_symbols+self.polarization_symbols+self.coefficient_symbols
-    #     mypoly = poly(expr,allsymbols,domain="QQ_I")
-    #     poly_dict = mypoly.as_dict()
-    #     r = MRing({})
-    #     for key in poly_dict.keys():
-    #         momentum_polarization_key = list(key[0:len(self.momentum_symbols+self.polarization_symbols)])
-    #         momentum_polarization_order = sum(momentum_polarization_key)
-    #         assert (momentum_polarization_order==0 or momentum_polarization_order==2)
-    #         mp_pair = [0,0]
-    #         if momentum_polarization_order == 2:
-    #             for i in range(2):
-    #                 index_gtzero = self.IndexGtZero(momentum_polarization_key)
-    #                 if index_gtzero>=len(self.momentum_symbols):
-    #                     mp_pair[i] = (index_gtzero-len(self.momentum_symbols))+1
-    #                 else:
-    #                     mp_pair[i] = -(index_gtzero+1)
-    #                 momentum_polarization_key[index_gtzero]-=1
-    #         mp_pair = tuple(mp_pair)
-    #         coefficient_key = key[len(self.momentum_symbols+self.polarization_symbols):]
-    #         coefficient_poly = Poly({coefficient_key:poly_dict[key]},self.coefficient_symbols,domain="QQ_I")
-    #         r += MRing({(mp_pair,):coefficient_poly})
-    #     return r
 
-
-    def ExprToMRing(self,expr):
+    def expr_to_mring(self,expr):
         #HACK!!!
         if (type(expr)==type(1) or str(expr)=="1" or str(expr)=="0" or str(expr)=="-1"):
             mypoly = Poly(expr,symbols('q'),domain="QQ_I")
@@ -74,7 +53,7 @@ class Interface(object):
             mp_pair = [0,0]
             if momentum_polarization_order == 2:
                 for i in range(2):
-                    index_gtzero = self.IndexGtZero(momentum_polarization_key)
+                    index_gtzero = self.index_gt_zero(momentum_polarization_key)
                     if index_gtzero>=len(momentum_symbols):
                         mp_pair[i] = (index_gtzero-len(momentum_symbols))+1
                     else:
@@ -90,11 +69,11 @@ class Interface(object):
             r += MRing({(mp_pair,):coefficient_poly})
         return r
 
-    def ExprToMRational(self,num,den):
+    def expr_to_mrational(self,num,den):
         mrat = MRational([[num,den],])
         return mrat.Collect()
 
-    def PrettyPrintMRing(self,obj):
+    def prettyprint_mring(self,obj):
         sorted_keys = sorted(obj.Mdict.keys())
         string = ''
         for key in sorted_keys:
@@ -157,7 +136,7 @@ class Interface(object):
         string=string.strip("+")
         return string
 
-    def Print(self,obj):
+    def display(self,obj):
         dummy = symbols('dummy')
         if type(obj)==type(poly(dummy,dummy,domain='QQ_I')):
             string = (obj.as_expr()).__str__()
@@ -167,19 +146,19 @@ class Interface(object):
             #    string = string.replace(source,bracketed_target)
             display(Math('$$'+string+'$$'))
         elif obj.mathtype=="MRing":
-            display(Math('$$'+self.PrettyPrintMRing(obj)+'$$'))
+            display(Math('$$'+self.prettyprint_mring(obj)+'$$'))
         elif obj.mathtype=="MRational":
             fracstring = ''
             for pair in obj.nd_list:
-                nstring = self.PrettyPrintMRing(pair[0])
-                #display(Math('$$'+self.PrettyPrintMRing(pair[0])+'$$'))
+                nstring = self.prettyprint_mring(pair[0])
+                #display(Math('$$'+self.prettyprint_mring(pair[0])+'$$'))
                 dstring = ''
                 for key in pair[1].keys():
                     if str(pair[1][key])!="1":
-                        dstring+='['+self.PrettyPrintMRing(key)+']'
+                        dstring+='['+self.prettyprint_mring(key)+']'
                         dstring+='^'+str(pair[1][key])
                     else:
-                        dstring += self.PrettyPrintMRing(key)
+                        dstring += self.prettyprint_mring(key)
                 #string+='\n\n'
                 nstring=nstring.replace("I","i")
                 nstring=nstring.replace("*","")
@@ -199,7 +178,7 @@ class Interface(object):
             assert False
 
 
-def DrawNXGraphList(nx_graph_list,waittime=0.2,ext=True):
+def draw_graphs(nx_graph_list,waittime=0.2,ext=True):
     #First, determine the number of external legs and
     #Compute an appropriate circular spring layout for them.
     mygraph = nx_graph_list[0]
@@ -286,15 +265,15 @@ class FeynmanRules():
         self.interactions = []
         self.propagators = {}
 
-    def RegisterInteraction(self,expr,fields,max_spin,perturbative_order,name):
+    def register_interaction(self,expr,fields,max_spin,perturbative_order,name):
         assert (max_spin==0 or max_spin==1), "Higher spin not yet handled!"
         #print("EXPR")
         #print(expr)
         #print("______________________________________")
         numerator = expr
-        denominator = {self.io.ExprToMRing(1):1}
+        denominator = {self.io.expr_to_mring(1):1}
         #print("VERTEX")
-        pspace_vertex = self.io.ExprToMRational(numerator,denominator)
+        pspace_vertex = self.io.expr_to_mrational(numerator,denominator)
         #print(pspace_vertex)
         #print("______________________________________")
         fieldblocks = {}
@@ -302,7 +281,7 @@ class FeynmanRules():
             fieldblocks.setdefault(field,[])
             fieldblocks[field].append(i+1)
         partitions = [tuple(position) for position in fieldblocks.values()]
-        perms = SymmetricPartitionPerms(partitions)
+        perms = symmetric_partition_permutations(partitions)
         if max_spin==0:
             symbolblocks = [[-i,] for i in range(1,len(fields)+1)]
         elif max_spin==1:
@@ -317,7 +296,7 @@ class FeynmanRules():
         #print("______________________________________")
         self.interactions.append([perturbative_order,len(fields),fields,feynrule,name])
 
-    def RegisterPropagator(self,expr,particle_id):
+    def register_propagator(self,expr,particle_id):
         self.propagators[particle_id]=expr
 
 
@@ -325,7 +304,7 @@ class TensorSymmetries():
     def __init__(self):
         self.tensor_symmetries = {}
 
-    def RegisterSymmetry(self,head,generator_sign_pairs):
+    def register_symmetry(self,head,generator_sign_pairs):
         signed_perms = [SignedPermutation(*pair) for pair in generator_sign_pairs]
         self.tensor_symmetries[head] = SignedPermutationGroup(signed_perms)
 
