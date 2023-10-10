@@ -41,7 +41,6 @@ class MRational(object):
         #Define mathtype
         self.mathtype = "MRational"
         if len(arg)==1 and type(arg[0])==type(self):
-            self.basis = arg[0].basis
             #Copy numerator and denominator to the local nd_list.
             #Numerator should be an MRing object, and denom should be dict of MRings.
             self.nd_list = list()
@@ -51,8 +50,7 @@ class MRational(object):
                     mykey = MRing(key)
                     denom_dict[mykey] = pair[1][key]
                 self.nd_list.append([MRing(pair[0]),denom_dict])
-        elif len(arg)==2:
-            self.basis = arg[1]
+        elif len(arg)==1 and hasattr(arg[0], '__iter__'):
             self.nd_list = list()
             for pair in arg[0]:
                 denom_dict = {}
@@ -77,7 +75,7 @@ class MRational(object):
                 target_denominator[target_key]+=pair[1][key]
             if not target_numerator.IsEmpty():
                 nd_list.append([target_numerator,target_denominator])
-        return MRational(nd_list,self.basis)
+        return MRational(nd_list)
 
     def ApplyToDenominators(self,function):
         nd_list = []
@@ -91,7 +89,7 @@ class MRational(object):
                 target_denominator[target_key]+=pair[1][key]
             if not target_numerator.IsEmpty():
                 nd_list.append([target_numerator,target_denominator])
-        return MRational(nd_list,self.basis)
+        return MRational(nd_list)
 
     def IndicesFromSymbol(self,symbol):
         symstring = symbol.__str__()
@@ -171,12 +169,12 @@ class MRational(object):
             numerator = reduce(lambda x,y: x+y, numerator_terms)
 
             #Make the replacments laid out in index_map.
-            q = MRational([[numerator,pair[1]],],self.basis)
+            q = MRational([[numerator,pair[1]],])
             for ipair,target in denominator_index_map.items():
                     q = q.TensorIndexReplacement(ipair[1],target,source_prefix=ipair[0],target_prefix=ipair[0])
 
             nd_list+=q.nd_list
-        rat = MRational(nd_list,self.basis)
+        rat = MRational(nd_list)
         rat = rat.Collect()
 
         return rat
@@ -238,18 +236,18 @@ class MRational(object):
             numerator = reduce(lambda x,y: x+y, numerator_terms)
 
             #Make the replacments laid out in index_map.
-            q = MRational([[numerator,pair[1]],],self.basis)
+            q = MRational([[numerator,pair[1]],])
             for source,target in denominator_index_map.items():
                     q = q.TensorIndexReplacement(source,target,target_prefix='b')
 
             nd_list+=q.nd_list
-        rat = MRational(nd_list,self.basis)
+        rat = MRational(nd_list)
         rat = rat.Collect()
 
         return rat
 
     def ProductReplacementCleanIndices(self):
-        target_rat = MRational([],self.basis)
+        target_rat = MRational([])
         #for pair in tqdm(self.nd_list,desc="PRCI"):
         for pair in self.nd_list:
             #First, tabulate all indices.
@@ -264,7 +262,7 @@ class MRational(object):
                     index_dict[key] = index_dict[key] | idict[key]
             #Replace d,g with z,w respectively, avoiding index collisions within
             #the nd_pair.
-            rat_term = MRational([[pair[0],pair[1]],],self.basis)
+            rat_term = MRational([[pair[0],pair[1]],])
             pairmap = {'d':'z','g':'w','k':'b'}
             for source,target in pairmap.items():
                 if source in index_dict.keys():
@@ -444,19 +442,19 @@ class MRational(object):
         #We've suppressed collection and zero-culling throughout the recursion.
         #We'll apply these simplifications once to the final product.
         #__add__ performs these automatically, so we simply add "target+0".
-        return target_rat + MRational([],self.basis)
+        return target_rat + MRational([])
 
     def BranchBoundIndex(self,pattern,targets,match):
-        target_rat = MRational([],self.basis)
+        target_rat = MRational([])
         for pair in self.nd_list:
             pattern_index = self.FirstMatchingPairIndex(pair,pattern,match)
             if pattern_index==False:
                 target_rat.nd_list.append(pair)
             else:
-                working_rat = MRational([],self.basis)
+                working_rat = MRational([])
                 for target in targets:
                     target_index = TargetIndex(pattern_index,target,match)
-                    term_rat = MRational([pair,],self.basis).TensorIndexReplacement(
+                    term_rat = MRational([pair,]).TensorIndexReplacement(
                                             pattern_index[1],target_index[1],
                                             source_prefix=pattern_index[0],
                                             target_prefix=target_index[0])
@@ -471,20 +469,20 @@ class MRational(object):
         r = r.ApplyToDenominators(function)
         return r
 
-    def OnShell(self):
-        return self.ApplyToMRing(self.basis.OnShellRestriction)
+    def OnShell(self,basis):
+        return self.ApplyToMRing(basis.OnShellRestriction)
 
     def EvaluateDelta(self):
         return self.ApplyToMRing(lambda r: MRing.EvaluateDelta(r))
 
-    def EjectMasses(self):
-        return self.ApplyToMRing(self.basis.EjectMasses)
+    def EjectMasses(self,basis):
+        return self.ApplyToMRing(basis.EjectMasses)
 
-    def ZeroMasses(self,masses):
-        return self.ApplyToMRing(lambda r: self.basis.ZeroMasses(r,masses))
+    def ZeroMasses(self,masses,basis):
+        return self.ApplyToMRing(lambda r: basis.ZeroMasses(r,masses))
 
-    def GroupMasses(self,massmap):
-        return self.ApplyToMRing(lambda r: self.basis.GroupMasses(r,massmap))
+    def GroupMasses(self,massmap,basis):
+        return self.ApplyToMRing(lambda r: basis.GroupMasses(r,massmap))
 
     def ZeroIndex(self,index):
         return self.ApplyToMRing(lambda r: MRing.ZeroIndex(r,index))
@@ -588,12 +586,12 @@ class MRational(object):
                     denominator.setdefault(key,0)
                     denominator[key]+=term[1][1][key]
                 prod_nd_list.append([numerator,denominator])
-            r = MRational(prod_nd_list,self.basis)
+            r = MRational(prod_nd_list)
             #r,upoly = r.UnifyGenerators()
             return r.Collect()
 
     def Orbit(self,perms,symbolblocks,signed=False,prefix='f'):
-        orbit = MRational([],self.basis)
+        orbit = MRational([])
 
         #for perm in tqdm(perms,desc="Permutations"):
         for perm in perms:
@@ -638,7 +636,7 @@ class MRational(object):
         target = target.TensorPrefixReplacement('b','k')
 
         last_rat = MRational(self)
-        next_rat = MRational([],self.basis)
+        next_rat = MRational([])
         count=0
         while True:
             loopmatch=False
@@ -650,14 +648,14 @@ class MRational(object):
                         if result==False:
                             target_term = Poly({tuple(term):coefficient},p.gens,domain="QQ_I")
                             ring_term = MRing({key:target_term})
-                            rat_term = MRational([[ring_term,den],],self.basis)
+                            rat_term = MRational([[ring_term,den],])
                             next_rat += rat_term
                         else:
                             loopmatch=True
                             stripped_term,xmap = result
                             target_term = Poly({tuple(stripped_term):coefficient},p.gens,domain="QQ_I")
                             ring_target = MRing({key:target_term})
-                            rat_target = MRational([[ring_target,den],],self.basis)
+                            rat_target = MRational([[ring_target,den],])
                             rat_target*=target
                             for source_pair,target_pair in xmap.items():
                                 rat_target = rat_target.TensorIndexReplacement(source_pair[1],target_pair[1],source_prefix = source_pair[0], target_prefix = target_pair[0])
@@ -679,7 +677,7 @@ class MRational(object):
             last_rat = MRational(next_rat)
 
     def DressMasses(self,mass_symbols):
-        q = MRational(self.nd_list,self.basis)
+        q = MRational(self.nd_list)
         z = symbols('z')
         for symbol in mass_symbols:
             target = poly(symbol*z,symbol,z,domain='QQ_I')
@@ -687,7 +685,7 @@ class MRational(object):
         return q,z
 
     def DressAllMasses(self,symbol):
-        target_rat = MRational([],self.basis)
+        target_rat = MRational([])
         mass_symbols = []
         #for pair in tqdm(self.nd_list,desc="PRCI"):
         for pair in self.nd_list:
@@ -705,7 +703,7 @@ class MRational(object):
                                 mass_symbols.append(gen)
         mass_symbols = list(set(mass_symbols))
 
-        q = MRational(self.nd_list,self.basis)
+        q = MRational(self.nd_list)
         for sym in mass_symbols:
             target = poly(sym*symbol,sym,symbol,domain='QQ_I')
             q = q.MonomialReplacement(sym,target)
@@ -734,10 +732,10 @@ class MRational(object):
                 D[key]+=1
                 if not N.IsEmpty():
                     nd_list.append([N,D])
-        return MRational(nd_list,self.basis)
+        return MRational(nd_list)
 
     def MaclaurinCoefficient(self,symbol,order):
-        q = MRational(self.nd_list,self.basis)
+        q = MRational(self.nd_list)
         for i in range(order):
             q = q.PartialDerivative(symbol)
         q = q.EvaluatePoly(symbol,0)
@@ -776,7 +774,7 @@ class MRational(object):
                     w_polynomial += newterm
                 w_mring += MRing({mbasis:w_polynomial})
             w_denominator[w_mring] = power
-        w_rational = MRational([[w_mring.One(),w_denominator],],self.basis)
+        w_rational = MRational([[w_mring.One(),w_denominator],])
         return w_rational,m
 
     def ComputeDiffMap(self,numerator,z,w,w_rational,zeta,m):
@@ -827,7 +825,7 @@ class MRational(object):
         w = symbols('w')
 
         assert not self.IsSymbolInPolys(w), "w symbol is already in use!"
-        laurent_coeff = MRational([],self.basis)
+        laurent_coeff = MRational([])
         for pair in tqdm(self.nd_list,desc="Computing UV Laurent Coefficient"):
             numerator = pair[0]
             denominator = pair[1]
@@ -913,7 +911,7 @@ class MRational(object):
         Compute the MRational Laurent coefficient of self at order [zeta]
         in terms of the complex variable [z].
         """
-        laurent_coeff = MRational([],self.basis)
+        laurent_coeff = MRational([])
         for pair in tqdm(self.nd_list,desc="Computing IR Laurent Coefficient"):
             numerator = pair[0]
             denominator = pair[1]
@@ -984,18 +982,18 @@ class MRational(object):
                 denkey,mypoly = key.UnifyGenerators(upoly)
                 denominator[denkey] = val
             new_nd_list.append([numerator,denominator])
-        return MRational(new_nd_list,self.basis),upoly
+        return MRational(new_nd_list),upoly
 
     def CullZeros(self):
         clean_nd_list = []
         for pair in self.nd_list:
             if not pair[0].IsEmpty():
                 clean_nd_list.append(pair)
-        return MRational(clean_nd_list,self.basis)
+        return MRational(clean_nd_list)
 
     def Add(self,other,collect=True):
         nd_list = self.nd_list + other.nd_list
-        r = MRational(nd_list,self.basis)
+        r = MRational(nd_list)
         #r,upoly = r.UnifyGenerators()
         if collect:
             r = r.Collect()
@@ -1123,7 +1121,7 @@ class MRational(object):
                 break
 
         #for i in tqdm([1,],desc="Instantiate MRational"):
-        r = MRational(zip(nd_vals,nd_keys),self.basis)
+        r = MRational(zip(nd_vals,nd_keys))
 
         #Clear zeros in the numerator.
         #for i in tqdm([1,],desc="Clear num zeros"):
@@ -1133,7 +1131,7 @@ class MRational(object):
             nr.CullZeros()
             if not nr.IsEmpty():
                 new_nd_list.append((nr,d))
-        r = MRational(new_nd_list,self.basis)
+        r = MRational(new_nd_list)
 
 
         #for i in tqdm([1,],desc="SignClear"):
@@ -1158,12 +1156,12 @@ class MRational(object):
 
 
     def Expand(self):
-        target_rat = MRational([],self.basis)
+        target_rat = MRational([])
         for pair in self.nd_list:
             for key,poly in pair[0].Mdict.items():
                 for pterm in pair[0].GetPTerms(poly):
                     term_ring = MRing({key:pterm})
-                    term_rat = MRational([[term_ring,pair[1]],],self.basis)
+                    term_rat = MRational([[term_ring,pair[1]],])
                     target_rat = target_rat.Add(term_rat,collect=False)
         return target_rat
 
@@ -1242,7 +1240,7 @@ class MRational(object):
                 for i in range(multiplicity):
                     numerator_term*=pole
             numerator+=numerator_term
-        return MRational([[numerator,LCD],],self.basis)
+        return MRational([[numerator,LCD],])
 
 
     def GetFreeSymbols(self):
@@ -1335,7 +1333,7 @@ class MRational(object):
             for r in denominator.keys():
                 assert len(r.FindPrefix(bound_prefix))==0, "Bound indices found in a denominator."
             target_nd_list.append([target_numerator,denominator])
-        return MRational(target_nd_list,self.basis)
+        return MRational(target_nd_list)
 
 
     def FreeIndicesToComponents(self,

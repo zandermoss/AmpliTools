@@ -6,17 +6,21 @@ from MRing import MRing
 from sympy import *
 from tqdm import tqdm
 from Interface import DrawNXGraphList
+from hashable_containers import hmap, hlist, HMultiGraph
+from nautypy import canonize_multigraph
 
 
 def GraphCopy(graph):
-    G = nx.Graph()
+    #G = nx.Graph()
+    G = HMultiGraph()
     for node in graph.nodes:
         G.add_node(
                    node,
                    multiplicity=graph.nodes[node]['multiplicity'],
-                   oplist=graph.nodes[node]['oplist'],
-                   opmap=dict(graph.nodes[node]['opmap']),
-                   unbound_opmap=dict(graph.nodes[node]['unbound_opmap']),
+                   #oplist=graph.nodes[node]['oplist'],
+                   oplist=hlist(graph.nodes[node]['oplist']),
+                   opmap=hmap(graph.nodes[node]['opmap']),
+                   unbound_opmap=hmap(graph.nodes[node]['unbound_opmap']),
                    ext_label=graph.nodes[node]['ext_label'],
                    mrational=MRational(graph.nodes[node]['mrational']),
                    name=graph.nodes[node]['name']
@@ -51,7 +55,8 @@ class Diagram(object):
             self.count = other.count
         elif (len(arg) == 2
               # and type(arg[0]) == type(nx.Graph())
-              and isinstance(arg[0], nx.Graph)
+              #and isinstance(arg[0], nx.Graph)
+              and isinstance(arg[0], HMultiGraph)
               # and type(arg[1]) == type(dict())):
               and isinstance(arg[1], dict)):
             self.G = GraphCopy(arg[0])
@@ -79,13 +84,13 @@ class Diagram(object):
         propagators = dict(list(self.propagators.items())
                            + list(other.propagators.items()))
         if len(set(self.G.nodes).intersection(set(other.G.nodes))) == 0:
-            return Diagram(nx.union(self.G, other.G), propagators)
+            return Diagram(HMultiGraph(nx.union(self.G, other.G)), propagators)
         else:
             # Assume integer labels and stabilize self.G labels.
             G = GraphCopy(self.G)
             H = nx.convert_node_labels_to_integers(GraphCopy(other.G),
                                                    first_label=max(G.nodes)+1)
-            return Diagram(nx.union(G, H), propagators)
+            return Diagram(HMultiGraph(nx.union(G, H)), propagators)
 
     def __mul__(self, other):
         assert type(self) == type(other)
@@ -161,7 +166,7 @@ class Diagram(object):
         # FIXME: assign *symmetrized* vertex expressions to the vertices.
         rat = MRational(nodes[node]['mrational'])
         multiplicity = nodes[node]['multiplicity']
-        oplist = nodes[node]['oplist']
+        oplist = hlist(nodes[node]['oplist'])
 
         # Relabel the vertex rational.
         index_map = {}
@@ -302,181 +307,228 @@ class DRing(object):
         return string
 
 
-class Isomorphism(object):
-    def node_match_with_extlabel(self, node1, node2):
-        """Match nodes, including ext_label attributes. [node1] and [node2]
-        are node attribute dictionaries corresponding to the pair of nodes
-        being matched."""
-        # Compare solely on the basis of MRational content.
-        return ((node1['mrational'] == node2['mrational'])
-                and (node1['ext_label'] == node2['ext_label']))
+# class Isomorphism(object):
+#     def node_match_with_extlabel(self, node1, node2):
+#         """Match nodes, including ext_label attributes. [node1] and [node2]
+#         are node attribute dictionaries corresponding to the pair of nodes
+#         being matched."""
+#         # Compare solely on the basis of MRational content.
+#         return ((node1['mrational'] == node2['mrational'])
+#                 and (node1['ext_label'] == node2['ext_label']))
+#
+#     def node_match_without_extlabel(self, node1, node2):
+#         """Match nodes, excluding ext_label attributes. [node1] and [node2]
+#         are node attribute dictionaries corresponding to the pair of nodes
+#         being matched."""
+#         # Compare solely on the basis of MRational content.
+#         return node1['mrational'] == node2['mrational']
+#
+#     def edge_match_ptype(self, edge1, edge2):
+#         """Match edges on the basis of particle type. [edge1] and [edge2]
+#         are edge attribute dictionaries corresponding to the pair of edges
+#         being matched."""
+#         return edge1['ptype'] == edge2['ptype']
+#
+#
+#     def InternalIsomorphismReduce(self, diagrams):
+#         my_diagrams = list(diagrams)
+#
+#         # Initialize and seed the isomorphism-reduced diagram list.
+#         new_diagrams = []
+#         dia = my_diagrams[0]
+#         new_diagrams.append(Diagram(dia))
+#         my_diagrams.remove(dia)
+#
+#         # Bin the remaining nxgraphs by isometry relative to a class
+#         # representative serving as the key for each class bucket.
+#         while len(my_diagrams) > 0:
+#             dia = my_diagrams[0]
+#             class_exists = False
+#             for n, diagram in enumerate(new_diagrams):
+#                 GM = isomorphism.GraphMatcher(
+#                                     dia.G,
+#                                     diagram.G,
+#                                     edge_match=self.edge_match_ptype,
+#                                     node_match=self.node_match_with_extlabel)
+#                 if GM.is_isomorphic():
+#                     new_diagrams[n].count += dia.count
+#                     class_exists = True
+#                     break
+#             if not class_exists:
+#                 new_diagrams.append(Diagram(dia))
+#             my_diagrams.remove(dia)
+#         return new_diagrams
+#
+#     def IsoMapToExtMap(self, source_graph, target_graph, isomap):
+#         extmap = {}
+#         for source, target in isomap.items():
+#             source_extlabel = source_graph.nodes[source]['ext_label']
+#             target_extlabel = target_graph.nodes[target]['ext_label']
+#             if source_extlabel is None:
+#                 assert target_extlabel is None
+#             if target_extlabel is None:
+#                 assert source_extlabel is None
+#             if source_extlabel is not None:
+#                 extmap[source_extlabel] = target_extlabel
+#         return extmap
+#
+#     def IdentityExtMap(self, nx_graph):
+#         extmap = {}
+#         for node in nx_graph.nodes:
+#             extlabel = nx_graph.nodes[node]['ext_label']
+#             if extlabel is not None:
+#                 extmap[extlabel] = extlabel
+#         return extmap
 
-    def node_match_without_extlabel(self, node1, node2):
-        """Match nodes, excluding ext_label attributes. [node1] and [node2]
-        are node attribute dictionaries corresponding to the pair of nodes
-        being matched."""
-        # Compare solely on the basis of MRational content.
-        return node1['mrational'] == node2['mrational']
 
-    def edge_match_ptype(self, edge1, edge2):
-        """Match edges on the basis of particle type. [edge1] and [edge2]
-        are edge attribute dictionaries corresponding to the pair of edges
-        being matched."""
-        return edge1['ptype'] == edge2['ptype']
+    # def ClassifyFullIsomorphism(self, diagrams):
+    #     # Initialize and seed the full isometry dictionary.
+    #     my_iso_dict = {}
+    #     for diagram in diagrams:
+    #         my_iso_dict[diagram.G] = int(diagram.count)
+    #     full_iso_dict = {}
+    #     nx_graph = list(my_iso_dict.keys())[0]
+    #     count = my_iso_dict[nx_graph]
+    #     idmap = self.IdentityExtMap(nx_graph)
+    #     full_iso_dict.setdefault(nx_graph, (count, [idmap, ]))
+    #     del my_iso_dict[nx_graph]
+    #
+    #     # Categorize the remaining nxgraphs (and their counts) by isometry
+    #     # relative to a class representative serving as the key for each
+    #     # class bucket in diagrams.
+    #     while len(my_iso_dict) > 0:
+    #         nx_graph = list(my_iso_dict.keys())[0]
+    #         count = my_iso_dict[nx_graph]
+    #         class_exists = False
+    #         for key in full_iso_dict.keys():
+    #             GM = isomorphism.GraphMatcher(
+    #                             key,
+    #                             nx_graph,
+    #                             edge_match=self.edge_match_ptype,
+    #                             node_match=self.node_match_without_extlabel)
+    #             if GM.is_isomorphic():
+    #                 assert full_iso_dict[key][0] == my_iso_dict[nx_graph]
+    #                 extmap = self.IsoMapToExtMap(key, nx_graph, GM.mapping)
+    #                 full_iso_dict[key][1].append(extmap)
+    #                 class_exists = True
+    #                 break
+    #         if not class_exists:
+    #             full_iso_dict.setdefault(nx_graph, (count, [idmap, ]))
+    #         del my_iso_dict[nx_graph]
+    #     return full_iso_dict
 
-    def BinInternalIsomorphism(self, dring):
-        nx_graphs = [dia.G for dia in dring.diagrams]
-        # Initialize and seed the internal isometry dictionary.
-        internal_iso_dict = {}
-        nx_graph = nx_graphs[0]
-        internal_iso_dict.setdefault(nx_graph, 1)
-        nx_graphs.remove(nx_graph)
 
-        # Bin the remaining nxgraphs by isometry relative to a class
-        # representative serving as the key for each class bucket in
-        # internal_iso_dict.
-        while len(nx_graphs) > 0:
-            nx_graph = nx_graphs[0]
-            class_exists = False
-            for key in internal_iso_dict.keys():
-                GM = isomorphism.GraphMatcher(
-                                    key,
-                                    nx_graph,
-                                    edge_match=self.edge_match_ptype,
-                                    node_match=self.node_match_with_extlabel)
-                if GM.is_isomorphic():
-                    internal_iso_dict[key] += 1
-                    class_exists = True
-                    break
-            if not class_exists:
-                internal_iso_dict.setdefault(nx_graph, 1)
-            nx_graphs.remove(nx_graph)
-        return internal_iso_dict
+def LabelsToExt(self,g):
+    return hmap({l:g.nodes[l]['ext_label'] for l in g.nodes if g.nodes[l]['ext_label'] != None})
 
-    def InternalIsomorphismReduce(self, diagrams):
-        my_diagrams = list(diagrams)
+def IsomapToExt(self,isomap,labels_to_ext):
+    return hmap({labels_to_ext[l]:labels_to_ext[isomap[l]] for l in labels_to_ext})
 
-        # Initialize and seed the isomorphism-reduced diagram list.
-        new_diagrams = []
-        dia = my_diagrams[0]
-        new_diagrams.append(Diagram(dia))
-        my_diagrams.remove(dia)
-
-        # Bin the remaining nxgraphs by isometry relative to a class
-        # representative serving as the key for each class bucket.
-        while len(my_diagrams) > 0:
-            dia = my_diagrams[0]
-            class_exists = False
-            for n, diagram in enumerate(new_diagrams):
-                GM = isomorphism.GraphMatcher(
-                                    dia.G,
-                                    diagram.G,
-                                    edge_match=self.edge_match_ptype,
-                                    node_match=self.node_match_with_extlabel)
-                if GM.is_isomorphic():
-                    new_diagrams[n].count += dia.count
-                    class_exists = True
-                    break
-            if not class_exists:
-                new_diagrams.append(Diagram(dia))
-            my_diagrams.remove(dia)
-        return new_diagrams
-
-    def IsoMapToExtMap(self, source_graph, target_graph, isomap):
-        extmap = {}
-        for source, target in isomap.items():
-            source_extlabel = source_graph.nodes[source]['ext_label']
-            target_extlabel = target_graph.nodes[target]['ext_label']
-            if source_extlabel is None:
-                assert target_extlabel is None
-            if target_extlabel is None:
-                assert source_extlabel is None
-            if source_extlabel is not None:
-                extmap[source_extlabel] = target_extlabel
-        return extmap
-
-    def IdentityExtMap(self, nx_graph):
-        extmap = {}
-        for node in nx_graph.nodes:
-            extlabel = nx_graph.nodes[node]['ext_label']
-            if extlabel is not None:
-                extmap[extlabel] = extlabel
-        return extmap
-
+def IsomorphismClassification(diagrams):
     """
-    def ClassifyFullIsomorphism(self,iso_dict):
-        #Initialize and seed the full isometry dictionary.
-        my_iso_dict = {}
-        for key,val in iso_dict.items():
-            my_iso_dict[key] = int(val)
-        full_iso_dict = {}
-        nx_graph = my_iso_dict.keys()[0]
-        count = my_iso_dict[nx_graph]
-        idmap = self.IdentityExtMap(nx_graph)
-        full_iso_dict.setdefault(nx_graph,(count,[idmap,]))
-        del my_iso_dict[nx_graph]
-        #Categorize the remaining nxgraphs (and their counts) by isometry
-        #relative to a class representative serving as the key for each
-        #class bucket in internal_iso_dict.
-        while len(my_iso_dict)>0:
-            nx_graph = my_iso_dict.keys()[0]
-            count = my_iso_dict[nx_graph]
-            class_exists=False
-            for key in full_iso_dict.keys():
-                GM = isomorphism.GraphMatcher(
-                                key,
-                                nx_graph,
-                                edge_match=self.edge_match_ptype,
-                                node_match=self.node_match_without_extlabel)
-                if GM.is_isomorphic():
-                    assert full_iso_dict[key][0]==my_iso_dict[nx_graph]
-                    extmap = self.IsoMapToExtMap(key,nx_graph,GM.mapping)
-                    full_iso_dict[key][1].append(extmap)
-                    class_exists=True
-                    break
-            if not class_exists:
-                full_iso_dict.setdefault(nx_graph,(count,[idmap,]))
-            del my_iso_dict[nx_graph]
-        return full_iso_dict
+    For each diagram's graph (g), there exists a canonical labeling (g_canon)
+    which is related to (g) by a node label permutation (s_g).
+    The nodes of any such (g) are divided into *external leg* nodes, and *internal* nodes.
+    Once the graph (g) is combined with the Feynman rules to compute an MRational
+    term (rat(g)) contributing to the amplitude, all internal leg momenta are replaced
+    by linear combinations of external leg momenta (for tree diagrams), and all internal
+    flavor indices are summed over, so the only labels remaining are the external leg labels.
+    The canonical permutation (s_g) thus acts on rat(g_canon) by a restricted permuation
+    of the external leg labels (s_g_ext).
+
+    We could compute rat(g) for every graph spat out by the SuperGraphDFS algorithm, but 
+    we would waste time doing unnecessary rational algebra. Instead, we will 'bin' the 
+    graphs (g) from SuperGraphDFS by their canonizations (g_canon) and the associated
+    external label permutation (s_g_ext) into a nested hmap structure (classes). 
+
+    To construct the amplitude, we step through the keys of (classes) and call
+    Diagram.ComputeMRational *only once* per isomorphism class. For each (s_g_ext)
+    in classes[g_canon], we compute s_g_ext(rat(g_canon)), multiply it by the number of
+    times the associated diagram appears (classes[g_canon][s_g_ext]), and add the
+    result to the amplitude.
+
+    The number of contractions grows rapidly with the number of external legs,
+    but the number of isomorphism classes grows much more slowly. In the worst
+    case, we work with an EFT containing an infinite tower of interaction operators
+    of unbounded dimension. Wick contractions of such a tower should yield a set
+    of labeled trees of cardinality O(n^n), where n is the number of external legs.
+    The number of isomorphism classes, on the other hand, is roughly O(3^n)
+    [doi:10.2307/1969046]. 
+
+    An additional improvement to this approach would see canonization used
+    as a pruning technique in the SuperGraphDFS algorithm to reduce the number
+    of contractions constructed by binning "online". Empirically, constructing
+    and manipulating rational expressions appears to take much longer than 
+    generating graphs from contractions, so we'll punt that optimization.
+
+    IsomorphismClassification constructs an hmap (classes) keyed by canonically
+    labeled graphs and valued by hmaps, which themselves are keyed by external label
+    permutations (s_g_ext) and valued by integer counts for the corresponding isomorph.
     """
+    print("IN IC0")
+    classes = hmap()
+    labels_to_ext = hmap()
 
-    def ClassifyFullIsomorphism(self, diagrams):
-        # Initialize and seed the full isometry dictionary.
-        my_iso_dict = {}
-        for diagram in diagrams:
-            my_iso_dict[diagram.G] = int(diagram.count)
-        full_iso_dict = {}
-        nx_graph = list(my_iso_dict.keys())[0]
-        count = my_iso_dict[nx_graph]
-        idmap = self.IdentityExtMap(nx_graph)
-        full_iso_dict.setdefault(nx_graph, (count, [idmap, ]))
-        del my_iso_dict[nx_graph]
-        # Categorize the remaining nxgraphs (and their counts) by isometry
-        # relative to a class representative serving as the key for each
-        # class bucket in diagrams.
-        while len(my_iso_dict) > 0:
-            nx_graph = list(my_iso_dict.keys())[0]
-            count = my_iso_dict[nx_graph]
-            class_exists = False
-            for key in full_iso_dict.keys():
-                GM = isomorphism.GraphMatcher(
-                                key,
-                                nx_graph,
-                                edge_match=self.edge_match_ptype,
-                                node_match=self.node_match_without_extlabel)
-                if GM.is_isomorphic():
-                    assert full_iso_dict[key][0] == my_iso_dict[nx_graph]
-                    extmap = self.IsoMapToExtMap(key, nx_graph, GM.mapping)
-                    full_iso_dict[key][1].append(extmap)
-                    class_exists = True
-                    break
-            if not class_exists:
-                full_iso_dict.setdefault(nx_graph, (count, [idmap, ]))
-            del my_iso_dict[nx_graph]
-        return full_iso_dict
+    print("IN IC")
+
+    for d in diagrams:
+        #Call NautyPy to canonicalize d.G.
+        #NautyPy returns g_canon, generators of its automorphisms,
+        #and a node label permutation map from g_canon to d.G.
+
+        #Remember that the external legs are labeled by g.nodes[label]['ext_label'],
+        #not by 'label' itself, so we need to conjugate the permutation isomap_from_canon
+        #by the 'label' to 'ext_label' permutation isomap_from_canon.
+        #We will apply the conjugated map to the MRational associated to the canonical
+        #diagram to construct its isomorphs.
+
+        #Canonization
+        print(f'type(d.G): {type(d.G)}')
+        print(repr(d.G))
+        print(f'd.G.nodes: {d.G.nodes}')
+        for node in d.G.nodes:
+            print('============================================================')
+            print(f'type(node): {type(node)}')
+            print(f'node: {node}')
+
+            print(f'type(multiplicity): {type(d.G.nodes[node]["multiplicity"])}')
+            print(f'multiplicity: {d.G.nodes[node]["multiplicity"]}')
+
+            print(f'type(oplist): {type(d.G.nodes[node]["oplist"])}')
+            print(f'oplist: {d.G.nodes[node]["oplist"]}')
+
+            print(f'type(opmap): {type(d.G.nodes[node]["opmap"])}')
+            print(f'opmap: {d.G.nodes[node]["opmap"]}')
+
+            print(f'type(unbound_opmap): {type(d.G.nodes[node]["unbound_opmap"])}')
+            print(f'unbound_opmap: {d.G.nodes[node]["unbound_opmap"]}')
+
+            print(f'type(ext_label): {type(d.G.nodes[node]["ext_label"])}')
+            print(f'ext_label: {d.G.nodes[node]["ext_label"]}')
+
+            print(f'type(mrational): {type(d.G.nodes[node]["mrational"])}')
+            print(f'mrational: {d.G.nodes[node]["mrational"]}')
+
+            print(f'type(name): {type(d.G.nodes[node]["name"])}')
+            print(f'name: {d.G.nodes[node]["name"]}')
+
+        g_canonical, autgens, isomap_from_canon = canonize_multigraph(d.G)
+
+        #Compute label -> ext_label map for g_canonical and cache.
+        labels_to_ext.setdefault(g_canonical,self.LabelsToExt(g_canonical))
+
+        #Compute isomap -> ext_isomap for d.G
+        ext_isomap = self.IsomapToExt(isomap_from_canon,labels_to_ext[g_canonical])
+
+        #Initialize and increment the entry for [g_canonical][ext_isomap] in classes.
+        classes.setdefault(g_canonical,hmap())
+        classes[g_canonical].setdefault(ext_isomap,0)
+        classes[g_canonical][ext_isomap] += 1
+
+    return classes
 
 
-def SuperGraphBFS(diagram, node):
+def SuperGraphDFS(diagram, node):
     # FIXME: need a sensible docstring
     unbound_opmap = diagram.G.nodes[node]['unbound_opmap']
     ptypes = unbound_opmap.keys()
@@ -520,119 +572,109 @@ def SuperGraphBFS(diagram, node):
                         del next_diagram.valent_nodes[ptype]
             if len(next_diagram.connected_valent_nodes[ptype]) == 0:
                 del next_diagram.connected_valent_nodes[ptype]
-# 		for neighbors in target:
-# 			for neighbor in neighbors:
-# 				if len(next_diagram.G.nodes[neighbor]['unbound_opmap'])>0:
-# 					if neighbor not in valent_neighbors:
-# 						valent_neighbors.append(neighbor)
-# 		if (len(valent_neighbors)==0
-#                and len(next_diagram.valent_nodes.keys())>0):
-#           print "TERMINATE"
-# 			print "NODE: ",node
-# 			print next_diagram.valent_nodes
-# 			DrawNXGraphList([next_diagram.G,],waittime=0)
-# 			continue
+
+        # Leaf
         if (len(next_diagram.valent_nodes.keys()) == 0
                 and len(next_diagram.connected_valent_nodes) == 0):
-            # print "LEAF"
-            # DrawNXGraphList([next_diagram.G,],waittime=0)
             diagram_list += [next_diagram, ]
+
+        # Terminate
         elif (len(next_diagram.valent_nodes.keys()) != 0
                 and len(next_diagram.connected_valent_nodes) == 0):
-            # print "TERMINATE"
-            # DrawNXGraphList([next_diagram.G,],waittime=0)
             continue
+
+        # Recurse
         else:
-            # print "RECURSE"
-            # DrawNXGraphList([next_diagram.G,],waittime=0)
-            diagram_list += SuperGraphBFS(
+            diagram_list += SuperGraphDFS(
                     next_diagram,
                     list(next_diagram.connected_valent_nodes.values())[0][0])
+
     return diagram_list
 
 
-def ComputeContractions(vertices,
-                        propagators,
-                        external_legs,
-                        tensor_symmetries):
+def ComputeContractions(vertices, propagators, external_legs, tensor_symmetries):
+    print("IN CC")
     # FIXME: need a sensible docstring
-    # Grab the basis object and identity polynomials from a propagator
+    # Grab the identity polynomials from a propagator
     # MRational.
-    basis = list(propagators.values())[0].basis
     # p_one = propagators.values()[0].nd_list[0][0].Mdict.values()[0].one
     p_one = list(propagators.values())[0].nd_list[0][0].PolyOne()
     # p_zero = propagators.values()[0].nd_list[0][0].Mdict.values()[0].zero
     p_zero = list(propagators.values())[0].nd_list[0][0].PolyZero()
     # Define the multiplicative identity in the MRational field.
     rat_one = MRational([[MRing({((0, 0),): p_one}),
-                        {MRing({((0, 0),): p_one}): 1}], ], basis)
+                        {MRing({((0, 0),): p_one}): 1}], ])
     # Define the additive identity in the MRational field.
     rat_zero = MRational([[MRing({((0, 0),): p_zero}),
-                         {MRing({((0, 0),): p_one}): 1}], ], basis)
+                         {MRing({((0, 0),): p_one}): 1}], ])
 
     # Generate internal vertex DRing list.
     internal_list = []
     label_counter = 1
     for multiplicity, oplist, r, name in vertices:
-        G = nx.Graph()
-        opmap = {}
+        #G = nx.Graph()
+        G = HMultiGraph()
+        opmap = hmap()
         for ptype in oplist:
             opmap.setdefault(ptype, 0)
             opmap[ptype] += 1
         G.add_node(label_counter,
                    multiplicity=multiplicity,
-                   oplist=oplist,
+                   oplist=hlist(oplist),
                    opmap=opmap,
-                   unbound_opmap=dict(opmap),
+                   unbound_opmap=hmap(opmap),
                    ext_label=None,
                    mrational=MRational(r),
                    name=name)
         internal_list.append(G)
         label_counter += 1
-
+    print("Done int DRING")
     # Generate external vertex DRing list.
     external_list = []
     root_vertex = None
     ext_label = 1
-    # FIXME: this is hardcoded for scalars, need to tweak to admit higher spins
     symbolblocks = []
     for ptype in external_legs:
-        G = nx.Graph()
+        #G = nx.Graph()
+        G = HMultiGraph()
         G.add_node(ext_label,
                    multiplicity=1,
-                   oplist=[ptype, ],
-                   opmap={ptype: 1},
-                   unbound_opmap={ptype: 1},
+                   oplist=hlist([ptype, ]),
+                   opmap=hmap({ptype: 1}),
+                   unbound_opmap=hmap({ptype: 1}),
                    ext_label=ext_label,
                    mrational=rat_one,
                    name=None)
         external_list.append(G)
-        # FIXME: spin1-specific!
         symbolblocks.append([-ext_label, ext_label])
         ext_label += 1
     # Use the largest ext_label as the root node label
     root_label = ext_label-1
-    # Compute the list of all complete, connected contractions of internal
-    # vertex DRings.
 
+    print("Done ext DRING")
+
+    # Compute the list of all complete, connected contractions of internal
+    # vertex DRing elements.
     seed_diagram = Diagram(internal_list[0], propagators)
     for i in range(1, len(internal_list)):
         seed_diagram += Diagram(internal_list[i], propagators)
     for i in range(0, len(external_list)):
         seed_diagram += Diagram(external_list[i], propagators)
-    # for i in tqdm([1,],desc="Contractions"):
-    diagrams = SuperGraphBFS(seed_diagram,
-                             list(seed_diagram.G.nodes.keys())[0])
+    #for i in tqdm([1,],desc="Contractions"):
+    print("Before SGDFS")
+    diagrams = SuperGraphDFS(seed_diagram,
+                    list(seed_diagram.G.nodes.keys())[0])
+    print("After SGDFS")
 
     if len(diagrams) == 0:
         # print "ZERORETURN"
         return rat_zero
 
-    iso = Isomorphism()
-    for i in tqdm([1, ], desc="Internal Isomorphism"):
-        diagrams = iso.InternalIsomorphismReduce(diagrams)
-
-    DR = DRing(diagrams)
+    # iso = Isomorphism()
+    # for i in tqdm([1, ], desc="Internal Isomorphism"):
+    #     diagrams = iso.InternalIsomorphismReduce(diagrams)
+    #
+    # DR = DRing(diagrams)
 
     # Now, compute the list of all contractions of these internally
     # contracted vertices with the external vertices (these
@@ -652,27 +694,37 @@ def ComputeContractions(vertices,
     # 	DrawNXGraphList([key,],waittime=2)
     # 	print Diagram(key,propagators)
     # print "LEN INTISODICT: ",len(int_iso_dict)
-    for i in tqdm([1, ], desc="Full Isomorphism"):
-        ext_iso_dict = iso.ClassifyFullIsomorphism(DR.diagrams)
+    #for i in tqdm([1, ], desc="Isomorphism Classification"):
+    print ("Before IC")
+    classes = IsomorphismClassification(diagrams)
+    print ("After IC")
+    #    classes = ClassifyFullIsomorphism(diagrams)
+
+    #   ext_iso_dict = iso.ClassifyFullIsomorphism(DR.diagrams)
 
     contraction_sum = MRational(rat_zero)
     # for key,value in tqdm(ext_iso_dict.items(),desc="Computing MRationals"):
-    for key, value in ext_iso_dict.items():
-        DrawNXGraphList([key, ], waittime=2)
-        key_diagram = Diagram(key, propagators)
+    for g_canon, isomaps in classes.items():
+        DrawNXGraphList([g_canon, ], waittime=2)
+        d_canon = Diagram(g_canon, propagators)
         # print key_diagram
-        for i in tqdm([1, ], desc="Construct MRational Expression"):
-            key_rat = key_diagram.ComputeMRational(root_label)
-        for i in tqdm([1, ], desc="Canonicalize Tensor Indices"):
-            key_rat = key_rat.CanonicalizeIndices(len(external_legs))
+        #for i in tqdm([1, ], desc="Construct MRational Expression"):
+        rat_canon = d_canon.ComputeMRational(root_label)
+        #for i in tqdm([1, ], desc="Canonicalize Tensor Indices"):
+        rat_canon = rat_canon.CanonicalizeIndices(len(external_legs))
         #for i in tqdm([1, ], desc="Sort Symmetric Tensor Indices"):
-        key_rat = key_rat.SortSymmetricIndices(tensor_symmetries)
-        key_rat = key_rat.Collect()
-        coefficient = value[0]
-        #for blockmap in tqdm(value[1], desc="BlockPermute"):
-        for blockmap in value[1]:
-            perm_key_rat = key_rat.BlockReplacement(blockmap, symbolblocks)
-            contraction_sum += perm_key_rat*coefficient
+        rat_canon = rat_canon.SortSymmetricIndices(tensor_symmetries)
+        #for i in tqdm([1, ], desc="Collect Terms"):
+        rat_canon = rat_canon.Collect()
+
+        #coefficient = value[0]
+        #for blockmap in tqdm(value[1], desc="External Label Permutations"):
+        # for blockmap in value[1]:
+        #     perm_key_rat = key_rat.BlockReplacement(blockmap, symbolblocks)
+        #     contraction_sum += perm_key_rat*coefficient
+        for isomap,count in isomaps.items():
+            rat_isomorph = key_canon.BlockReplacement(isomap, symbolblocks)
+            contraction_sum += rat_isomorph*count
 
     return contraction_sum
 
@@ -711,17 +763,16 @@ def ComputeTreeAmplitude(interactions,
     and then computing all possible contractions of the various operators in
     this coefficient.
     """
-
-    # Grab the basis object and identity polynomials from an interaction
+    print("IN CTA")
+    # Grab the identity polynomials from an interaction
     # MRational.
-    basis = interactions[0][3].basis
     # p_one = interactions[0][3].nd_list[0][0].Mdict.values()[0].one
     p_one = interactions[0][3].nd_list[0][0].PolyOne()
     # p_zero = interactions[0][3].nd_list[0][0].Mdict.values()[0].zero
     p_zero = interactions[0][3].nd_list[0][0].PolyZero()
     # Define the additive identity in the MRational field.
     rat_zero = MRational([[MRing({((0, 0),): p_zero}),
-                         {MRing({((0, 0),): p_one}): 1}], ], basis)
+                         {MRing({((0, 0),): p_one}): 1}], ])
 
     # First, sort the interaction operators by the associated power of g,
     # the perturbative parameter.
@@ -799,7 +850,7 @@ def ComputeTreeAmplitude(interactions,
 
         # For the time being, we'll do the isomorphism reductions in
         # ComputeContractions.
-
+        print("BEFORE ComputeContractions")
         for vertices in vertex_lists:
             # print "----------__VERTEXSET__---------"
             # print vertices
@@ -809,6 +860,7 @@ def ComputeTreeAmplitude(interactions,
                                           tensor_symmetries)
             diagram *= coefficient
             amplitude += diagram
+        print("done ComputeContractions")
         #for i in tqdm([1, ], desc="SORTING"):
         amplitude = amplitude.SortSymmetricIndices(tensor_symmetries)
         #for i in tqdm([1, ], desc="AMPCOLLECT"):

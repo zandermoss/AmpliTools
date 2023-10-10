@@ -90,8 +90,8 @@ class Interface(object):
             r += MRing({(mp_pair,):coefficient_poly})
         return r
 
-    def ExprToMRational(self,num,den,basis):
-        mrat = MRational([[num,den],],basis)
+    def ExprToMRational(self,num,den):
+        mrat = MRational([[num,den],])
         return mrat.Collect()
 
     def PrettyPrintMRing(self,obj):
@@ -245,12 +245,16 @@ def DrawNXGraphList(nx_graph_list,waittime=0.2,ext=True):
                     labeldict[node]=''
                 else:
                     labeldict[node]=label
-        if ext:
+        #if ext:
             #pos_dict = nx.spring_layout(nx_graph,pos=spring_pos_dict,fixed=spring_fixed,iterations=100)
-            pos_dict = nx.circular_layout(nx_graph)
-        else:
+            #pos_dict = nx.circular_layout(nx_graph)
+        #else:
             #pos_dict = nx.spring_layout(nx_graph)
-            pos_dict = nx.circular_layout(nx_graph)
+            #pos_dict = nx.circular_layout(nx_graph)
+
+        #pos_dict = nx.nx_pydot.graphviz_layout(nx.to_agraph(nx_graph), prog="dot")
+#        pos_dict = nx.planar_layout(nx_graph)
+        pos_dict = nx.nx_agraph.graphviz_layout(nx_graph,prog='dot')
 
         a.cla()
         epi = [(u, v) for (u, v, d) in nx_graph.edges(data=True) if d['ptype'] == 'pi']
@@ -259,10 +263,11 @@ def DrawNXGraphList(nx_graph_list,waittime=0.2,ext=True):
         ephi = [(u, v) for (u, v, d) in nx_graph.edges(data=True) if d['ptype'] == 'phi']
         if ext:
             #nx.draw_networkx_nodes(nx_graph,ax=a,labels=labeldict,font_weight='bold',pos=pos_dict)
-            nx.draw_networkx_nodes(nx_graph,ax=a,pos=pos_dict,node_color='#FF6C0C')
+            #nx.draw_networkx_nodes(nx_graph,ax=a,pos=pos_dict,node_color='#FF6C0C')
+            nx.draw_networkx_nodes(nx_graph,ax=a,pos = pos_dict,node_color='#FF6C0C')
         else:
             #nx.draw_networkx_nodes(nx_graph,ax=a,font_weight='bold',pos=pos_dict)
-            nx.draw_networkx_nodes(nx_graph,ax=a,pos=pos_dict,node_color='#FF6C0C')
+            nx.draw_networkx_nodes(nx_graph,ax=a,pos = pos_dict,node_color='#FF6C0C')
         nx.draw_networkx_edges(nx_graph,ax=a,pos=pos_dict,edgelist=epi)
         nx.draw_networkx_edges(nx_graph,ax=a,pos=pos_dict,edgelist=ephi)
         nx.draw_networkx_edges(nx_graph,ax=a,pos=pos_dict,edgelist=ehiggs,style='dashed')
@@ -275,10 +280,9 @@ def DrawNXGraphList(nx_graph_list,waittime=0.2,ext=True):
         time.sleep(waittime)
 
 class FeynmanRules():
-    def __init__(self,tensor_symmetries,io,basis):
+    def __init__(self,tensor_symmetries,io):
         self.tensor_symmetries = tensor_symmetries
         self.io = io
-        self.basis = basis
         self.interactions = []
         self.propagators = {}
 
@@ -290,7 +294,7 @@ class FeynmanRules():
         numerator = expr
         denominator = {self.io.ExprToMRing(1):1}
         #print("VERTEX")
-        pspace_vertex = self.io.ExprToMRational(numerator,denominator,self.basis)
+        pspace_vertex = self.io.ExprToMRational(numerator,denominator)
         #print(pspace_vertex)
         #print("______________________________________")
         fieldblocks = {}
