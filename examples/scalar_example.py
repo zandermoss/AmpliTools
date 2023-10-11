@@ -35,14 +35,14 @@ from IPython.display import display, clear_output
 import time
 import math
 
-from Interface import Interface, FeynmanRules, TensorSymmetries
-from Spin0Basis import Basis
-from MRational import MRational
-from AT2Mathematica import MRational2File
-from PermutationTools import SymmetricPartitionPerms
-from SignedPermutations import SignedPermutationGroup, SignedPermutation
-from TensorTools import TensorIndexReplacement
-from Graph import ComputeTreeAmplitude
+from interface import Interface, FeynmanRules, TensorSymmetries
+from kinematic_basis import Basis
+from mrational import MRational
+from mathematica_conversion import mrational_to_file
+from permutation_tools import symmetric_partition_permutations
+from signed_permutations import SignedPermutationGroup, SignedPermutation
+from tensor_tools import tensor_index_replacement
+from graph import compute_tree_amplitude
 
 
 # ### SymPy Variables
@@ -67,7 +67,7 @@ m_phi = symbols('m_\phi')
 # 2. a sympy variable, and
 # 3. a TensorSymmetry object, which encodes the index permutation symmetries, and associated signs.
 # 
-# - RegisterSymmetry() takes tensor heads, generators, and generator signs as arguments.
+# - register_symmetry() takes tensor heads, generators, and generator signs as arguments.
 # - Here, "sign" does not refer to the sign of the permutation in the group theoretic sense,but rather to the phase induced by a particular permutation of the states. 
 # - Fermionic symmetries will contribue such phases, but we'll work with bosons here.
 # - Indices of the form f# denote "free", or external-leg indices. Indices b#, on the other hand, denote "bound" (internal line) indices.
@@ -78,11 +78,11 @@ m_phi = symbols('m_\phi')
 #Define flavor/color tensors and specify their symmetries.
 tensym = TensorSymmetries()
 ID_f1f2 = symbols('ID_{f1f2}')
-tensym.RegisterSymmetry("ID",[([2,1],1),])
+tensym.register_symmetry("ID",[([2,1],1),])
 A_f1f2f3 = symbols('A_{f1f2f3}')
-tensym.RegisterSymmetry("A",[([2,1,3],1),([1,3,2],1)])
+tensym.register_symmetry("A",[([2,1,3],1),([1,3,2],1)])
 B_f1f2f3f4 = symbols('B_{f1f2f3f4}')
-tensym.RegisterSymmetry("B",[([2,1,3,4],1),([1,3,2,4],1),([1,2,4,3],1)])
+tensym.register_symmetry("B",[([2,1,3,4],1),([1,3,2,4],1),([1,2,4,3],1)])
 
 flavor_tensors = [ID_f1f2, A_f1f2f3, B_f1f2f3f4]
 coefficient_symbols = mass_symbols + mass_tensors + [m_phi,] + flavor_tensors
@@ -102,11 +102,11 @@ io = Interface(momentum_symbols,polarization_symbols,coefficient_symbols,coeffic
 
 #Define convenience functions.
 def mring(expr):
-    return io.ExprToMRing(expr)
+    return io.expr_to_mring(expr)
 def mrat(num,den):
-    return io.ExprToMRational(num,den)
+    return io.expr_to_mrational(num,den)
 def mprint(malg):
-    io.Print(malg)
+    io.display(malg)
 
 
 # ### Aside: MRing and MRational
@@ -120,7 +120,7 @@ def mprint(malg):
 # ### Interaction operators and Feynman Rules
 # - Lagrangian operators involve flavor tensors and momenta/polarizations (in the spin 1+ case).
 # - The FeynmanRules class takes a minimal kinematic basis and the TensorSymmetries object at initialization.
-# - Its method RegisterPropagator/RegisterInteraction then converts an expression containing momenta, polarizations, and flavor tensors into a vertex or propagator.
+# - Its method register_propagator/register_interaction then converts an expression containing momenta, polarizations, and flavor tensors into a vertex or propagator.
 # - This amounts to symmetrizing the fields and reducing the result using flavor symmetries and momentum conservation constraints.
 # - We won't worry about derivative coupling or polarizations in this example.
 
@@ -142,20 +142,20 @@ feynrules = FeynmanRules(tensym.tensor_symmetries,io)
 p1,p2 = symbols('p1 p2')
 m_f1 = symbols('m_{f1}')
 phiprop = mrat(mring(I*ID_f1f2),{mring(p1*p1-m_f1**2):1})
-feynrules.RegisterPropagator(phiprop,"phi")
+feynrules.register_propagator(phiprop,"phi")
 
 #Register interactions
 expr_A = mring(A_f1f2f3)
-feynrules.RegisterInteraction(expr_A,['phi','phi','phi'],0,1,"A")
+feynrules.register_interaction(expr_A,['phi','phi','phi'],0,1,"A")
 
 expr_B = mring(B_f1f2f3f4)
-feynrules.RegisterInteraction(expr_B,['phi','phi','phi','phi'],0,2,"B")
+feynrules.register_interaction(expr_B,['phi','phi','phi','phi'],0,2,"B")
 
 
 # ## 4-Point Tree Amplitude
 # ### Constructing the Amplitude
 # - Assuming a pure-scalar scattering process, the external legs are tagged accordingly.
-# - Finally, calculation begins with a call to ComputeTreeAmplitude() from the Graph module.
+# - Finally, calculation begins with a call to compute_tree_amplitude() from the Graph module.
 # - Given the Feynman rules and symmetries prepared above, AmpliTools performs the first three steps of the calculation: identifying diagram topologies, building symbolic expressions by dressing those topologies with the Feynman rules, and reducing the resulting expression modulo flavor tensor symmetries (also known as "index canonicalization").
 # - The final two steps: reduction mod kinematic constraints and output, are done separately in the next cell. It is useful to separate the kinematic manipulations so one has the option of working with expressions for the amplitudes lifted to off-shell kinematic space.
 
@@ -165,7 +165,7 @@ feynrules.RegisterInteraction(expr_B,['phi','phi','phi','phi'],0,2,"B")
 npoint = 4
 external_legs = ['phi' for i in range(0,npoint)]
 
-amplitude = ComputeTreeAmplitude(feynrules.interactions,feynrules.propagators,external_legs,tensym.tensor_symmetries)
+amplitude = compute_tree_amplitude(feynrules.interactions,feynrules.propagators,external_legs,tensym.tensor_symmetries)
 
 
 # In[ ]:
@@ -176,7 +176,7 @@ mprint(amplitude)
 
 # ### Kinematic Reductions
 # - We reduce the amplitude MRational by kinematic constraints and send Mandelstam invariants of the form $p_i \cdot p_i$ to SymPy symbols $m^2_i$.
-# - Mass symbols $m^2_i$ are converted to the same f#/b# notation ($m^2_{fi}$ or $m^2_{bi}$) as the flavor tensors by GroupMasses()
+# - Mass symbols $m^2_i$ are converted to the same f#/b# notation ($m^2_{fi}$ or $m^2_{bi}$) as the flavor tensors by group_masses()
 # - Finally, the amplitude is typeset and displayed.
 
 # In[ ]:
@@ -188,13 +188,13 @@ spin = 0
 basis = Basis(spin,npoint)
 
 #Reduce and simplify expression using on-shell and momentum conservation constraints.
-amplitude_os = amplitude.OnShell(basis).EjectMasses(basis)
+amplitude_os = amplitude.onshell(basis).eject_masses(basis)
 
 #Finally, associate propagating and external masses with their corresponding flavor indices.
 #Indices (f#) are free (external leg labels).
 #Indices (b#) are bound (propagator leg labels). 
 for i in range(npoint):
-    amplitude_os = amplitude_os.GroupMasses({(mass_symbols[i],):mass_tensors[i]},basis)
+    amplitude_os = amplitude_os.group_masses({(mass_symbols[i],):mass_tensors[i]},basis)
 
 mprint(amplitude_os)
 
@@ -215,7 +215,7 @@ mprint(amplitude_os)
 npoint = 5
 external_legs = ['phi' for i in range(0,npoint)]
 
-amplitude = ComputeTreeAmplitude(feynrules.interactions,feynrules.propagators,external_legs,tensym.tensor_symmetries)
+amplitude = compute_tree_amplitude(feynrules.interactions,feynrules.propagators,external_legs,tensym.tensor_symmetries)
 
 
 # In[ ]:
@@ -232,9 +232,9 @@ spin = 0
 basis = Basis(spin,npoint)
 
 for _ in tqdm([1]):
-    amplitude_os = amplitude.OnShell(basis).EjectMasses(basis)
+    amplitude_os = amplitude.onshell(basis).eject_masses(basis)
     for i in range(npoint):
-        amplitude_os = amplitude_os.GroupMasses({(mass_symbols[i],):mass_tensors[i]},basis)
+        amplitude_os = amplitude_os.group_masses({(mass_symbols[i],):mass_tensors[i]},basis)
 
 mprint(amplitude_os)
 
@@ -245,5 +245,5 @@ mprint(amplitude_os)
 npoint = 6
 external_legs = ['phi' for i in range(0,npoint)]
 
-amplitude = ComputeTreeAmplitude(feynrules.interactions,feynrules.propagators,external_legs,tensym.tensor_symmetries)
+amplitude = compute_tree_amplitude(feynrules.interactions,feynrules.propagators,external_legs,tensym.tensor_symmetries)
 

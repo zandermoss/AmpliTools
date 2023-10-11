@@ -3,6 +3,7 @@ from permutation_tools import monomial_signature, monomial_tag, symmetric_orbit,
 from itertools import permutations,product
 import pickle
 from sympy import Rational, poly, symbols
+from hashable_containers import hmap
 
 
 class Basis():
@@ -16,9 +17,9 @@ class Basis():
 
 	def eject_masses(self,r):
 		""" Eject masses from MRing generator pairs to polynomial ring. """
-		rnew = MRing({})
+		rnew = MRing(hmap())
 		m_1 = symbols('m_1')
-		for key in r.Mdict.keys():
+		for key in r.mdict.keys():
 			masspoly = poly(1,m_1,domain='QQ_I')
 			newkey = []
 			for pair in key:
@@ -31,12 +32,12 @@ class Basis():
 			if len(newkey)==0:
 				newkey.append((0,0))
 			newkey = tuple(newkey)
-			p = r.Mdict[key]
+			p = r.mdict[key]
 			masspoly = masspoly.exclude()
 			masspoly = masspoly.set_domain('QQ_I')
 			p*=masspoly
-			rnew.Mdict.setdefault(newkey,r.PolyZero())
-			rnew+=MRing({newkey:p})
+			rnew.mdict.setdefault(newkey,r.poly_zero())
+			rnew+=MRing(hmap({newkey:p}))
 		rnew.cull_zeros()
 		return rnew
 
@@ -53,15 +54,15 @@ class Basis():
 			for mass in key:
 				target_poly = poly(massmap[key],massmap[key],domain='QQ_I')
 				#rnew = rnew.MonomialReplacement(mass,target_poly)
-				#rnew = rnew.ReplReplacement(mass,target_poly)
-				rnew = rnew.ReplReplacement(mass,massmap[key])
+				#rnew = rnew.repl_replacement(mass,target_poly)
+				rnew = rnew.repl_replacement(mass,massmap[key])
 		rnew.cull_zeros()
 		return rnew
 
 	def onshell_restriction(self,r):
 			rnew = MRing(r)
 			momentumtarget = [[-1,-i] for i in range(1,self.npoint)]
-			rnew = rnew.Replacement({-self.npoint:momentumtarget})
+			rnew = rnew.replacement({-self.npoint:momentumtarget})
 			pairtarget = list()
 			pairtarget.append([Rational(1,2),(-self.npoint,-self.npoint)])
 			pairtarget+=[[Rational(-1,2),(-i,-i)] for i in range(1,self.npoint)]
@@ -82,9 +83,9 @@ class Basis():
 	
 #
 #	def ScrubCoefficients(self,mr):
-#	   for key in mr.Mdict.keys():
+#	   for key in mr.mdict.keys():
 #		   #NOTE: Changed this from (1,) poly.
-#		   mr.Mdict[key] = Poly({(0,):Rational(1)})
+#		   mr.mdict[key] = Poly({(0,):Rational(1)})
 #
 #	def KeyCompare(self,A,B):
 #		"""
@@ -199,7 +200,7 @@ class Basis():
 #		else:
 #			epsilon_count = 1
 #		workvec = MRing({})
-#		for key in mr.Mdict.keys():
+#		for key in mr.mdict.keys():
 #			if (self.spin==2 and self.symmetric==False):
 #				intlist = [0 for i in range(2*self.npoint)]
 #			else:
@@ -213,7 +214,7 @@ class Basis():
 #				if i!=epsilon_count:
 #					multilinear=False
 #			if multilinear:
-#				workvec.Mdict[key] = mr.Mdict[key]
+#				workvec.mdict[key] = mr.mdict[key]
 #		return workvec
 #	
 #	#Now, we're ready to step through each of the possible power countings, and take the appropriate set products. We do a round of pruning for polarization multilinearity after each fusion operation. Otherwise, if we leave the pruning to the end, the size of the intermediate Mvectors balloons, and the script will run all day.
@@ -241,8 +242,8 @@ class Basis():
 #	
 #	def GetBasis(self,mlset):
 #		sigs = {}
-##		for key in tqdm(mlset.Mdict.keys()):
-#		for key in mlset.Mdict.keys():
+##		for key in tqdm(mlset.mdict.keys()):
+#		for key in mlset.mdict.keys():
 #			tag = monomial_tag(key,self.symbolblocks)
 #			sig = monomial_signature(key,self.symbolblocks,True)
 #			sigs[key] = (tag,sig)
@@ -272,11 +273,11 @@ class Basis():
 #		#We need enough coefficients to accommodate all basis elements.
 #		#We also allow for extra coefficients to carry other data (like
 #		#explicit dimensional dependence).
-#		clist_size = len(basis.Mdict)+extra_labels
+#		clist_size = len(basis.mdict)+extra_labels
 #		clist_base = [0 for i in range(clist_size)]
 #		count=0
 #		labelledbasis = MRing({})
-#		sorted_keys = sorted(basis.Mdict.keys(),cmp=self.KeyCompare)
+#		sorted_keys = sorted(basis.mdict.keys(),cmp=self.KeyCompare)
 #		for key in sorted_keys:
 #			clist = list(clist_base)
 #			clist[count]=1
@@ -292,7 +293,7 @@ class Basis():
 #	
 #	def PruneForbiddenPairs(self,mr):
 #		workvec = MRing({})
-#		for key in mr.Mdict.keys():
+#		for key in mr.mdict.keys():
 #			keep=True
 #			for pair in key:
 #				#FIXME: generalize for higher-point
@@ -302,7 +303,7 @@ class Basis():
 #					keep=False 
 #				assert (pair not in self.errorpairs)
 #			if keep:
-#				workvec.Mdict[key] = mr.Mdict[key]
+#				workvec.mdict[key] = mr.mdict[key]
 #		return workvec
 
 #	def ReplaceForbiddenPairs(self,mr):
@@ -316,7 +317,7 @@ class Basis():
 #		mr.pair_replacement({(-3,4):[[-1,(-1,4)],[-1,(-2,4)]]})
 #		mr.pair_replacement({(-3,14):[[-1,(-1,14)],[-1,(-2,14)]]})
 #		#Check that no forbidden pairs remain!
-#		for key in mr.Mdict.keys():
+#		for key in mr.mdict.keys():
 #			for pair in key:
 #				assert (pair not in self.forbiddenpairs)
 #				assert (pair not in self.errorpairs)

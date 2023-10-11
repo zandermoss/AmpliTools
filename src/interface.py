@@ -10,6 +10,7 @@ import math
 from permutation_tools import symmetric_partition_permutations
 from signed_permutations import SignedPermutationGroup, SignedPermutation
 import re
+from hashable_containers import hmap,hlist
 
 
 class Interface(object):
@@ -43,7 +44,7 @@ class Interface(object):
         generators = momentum_symbols + polarization_symbols + coefficient_symbols
         mypoly = Poly(expr,generators,domain="QQ_I")
         poly_dict = mypoly.as_dict()
-        r = MRing({})
+        r = MRing(hmap())
         for key in poly_dict.keys():
             #print("Key: {}".format(key))
             momentum_polarization_key = list(key[0:len(momentum_symbols+polarization_symbols)])
@@ -66,15 +67,15 @@ class Interface(object):
                 coefficient_poly = Poly(poly_dict[key],symbols('q'),domain="QQ_I")
             else:
                     coefficient_poly = Poly({coefficient_key:poly_dict[key]},coefficient_symbols,domain="QQ_I")
-            r += MRing({(mp_pair,):coefficient_poly})
+            r += MRing(hmap({(mp_pair,):coefficient_poly}))
         return r
 
     def expr_to_mrational(self,num,den):
-        mrat = MRational([[num,den],])
-        return mrat.Collect()
+        mrat = MRational(hlist([hlist([num,den]),]))
+        return mrat.collect()
 
     def prettyprint_mring(self,obj):
-        sorted_keys = sorted(obj.Mdict.keys())
+        sorted_keys = sorted(obj.mdict.keys())
         string = ''
         for key in sorted_keys:
             pairstring = ''
@@ -91,16 +92,16 @@ class Interface(object):
                 else:
                     pass
 
-            if obj.Mdict[key].length()==1:
-                if obj.Mdict[key].as_expr().__str__()=="1":
+            if obj.mdict[key].length()==1:
+                if obj.mdict[key].as_expr().__str__()=="1":
                     polystring = ''
                 else:
-                    polystring = obj.Mdict[key].as_expr().__str__()
+                    polystring = obj.mdict[key].as_expr().__str__()
             else:
-                polystring = '('+obj.Mdict[key].as_expr().__str__()+')'
+                polystring = '('+obj.mdict[key].as_expr().__str__()+')'
             polystring = polystring.replace("**","^")
             #Format indices properly
-            syms = list(obj.Mdict[key].free_symbols)
+            syms = list(obj.mdict[key].free_symbols)
             symstrings = [sym.__str__() for sym in syms]
             fancystrings = []
             for mystring in symstrings:
@@ -186,7 +187,7 @@ def draw_graphs(nx_graph_list,waittime=0.2,ext=True):
         ext_labels = []
         for node in mygraph.nodes:
             mylabel = mygraph.nodes[node]['ext_label']
-            if mylabel!=None:
+            if mylabel>=0:
                 ext_labels.append(mylabel)
         n_ext = len(ext_labels)
         slice_angle = 2.0*math.pi/float(n_ext)
@@ -207,7 +208,7 @@ def draw_graphs(nx_graph_list,waittime=0.2,ext=True):
             spring_fixed = []
             for node in nx_graph.nodes:
                 label = nx_graph.nodes[node]['ext_label']
-                if label==None:
+                if label<0:
                     labeldict[node]=nx_graph.nodes[node]['name']
                     #labeldict[node]=node
                     spring_pos_dict[node] = (0,0)
@@ -220,7 +221,7 @@ def draw_graphs(nx_graph_list,waittime=0.2,ext=True):
             labeldict = {}
             for node in nx_graph.nodes:
                 label = nx_graph.nodes[node]['name']
-                if label==None:
+                if label=='':
                     labeldict[node]=''
                 else:
                     labeldict[node]=label
@@ -271,7 +272,7 @@ class FeynmanRules():
         #print(expr)
         #print("______________________________________")
         numerator = expr
-        denominator = {self.io.expr_to_mring(1):1}
+        denominator = hmap({self.io.expr_to_mring(1):1})
         #print("VERTEX")
         pspace_vertex = self.io.expr_to_mrational(numerator,denominator)
         #print(pspace_vertex)
@@ -287,11 +288,11 @@ class FeynmanRules():
         elif max_spin==1:
             symbolblocks = [[-i,i] for i in range(1,len(fields)+1)]
         #print("ORBIT")
-        feynrule = pspace_vertex.Orbit(perms,symbolblocks)
+        feynrule = pspace_vertex.orbit(perms,symbolblocks)
         #print(feynrule)
         #print("______________________________________")
         #print("SORT")
-        feynrule = feynrule.SortSymmetricIndices(self.tensor_symmetries)
+        feynrule = feynrule.sort_indices(self.tensor_symmetries)
         #print(feynrule)
         #print("______________________________________")
         self.interactions.append([perturbative_order,len(fields),fields,feynrule,name])

@@ -7,7 +7,10 @@ from sympy import *
 from tqdm import tqdm
 from interface import draw_graphs
 from hashable_containers import hmap, hlist, HMultiGraph
-from nautypy import canonize_multigraph
+from sympy.combinatorics import Permutation, PermutationGroup
+from sympy.combinatorics.named_groups import SymmetricGroup
+import nautypy as nty
+import matplotlib.pyplot as plt
 
 
 def graph_copy(graph):
@@ -151,7 +154,7 @@ class Diagram(object):
         rat, plist, label_counter = self.burrow(neighbor,
                                                 root_node,
                                                 len(nodes))
-        rat = rat.DeltaContract(delta_head)
+        rat = rat.contract_deltas(delta_head)
         # rat = rat.CleanDummyIndices()
         # rat = rat.canonize_indices()
         return rat
@@ -180,7 +183,8 @@ class Diagram(object):
         # Isolate the parent index.
         keys = list(index_map.keys())
         values = list(index_map.values())
-        parent_index = keys[values.index(edges[node, parent]['ptype'])]
+        #Hack: need to generalize for multigraphs
+        parent_index = keys[values.index(edges[node, parent,0]['ptype'])]
         del index_map[parent_index]
 
         # Downstream work (inductive step).
@@ -190,12 +194,13 @@ class Diagram(object):
         for neighbor in downstream_neighbors:
             keys = list(index_map.keys())
             values = list(index_map.values())
-            first_index = keys[values.index(edges[node, neighbor]['ptype'])]
+            #Hack: need to generalize for multigraphs
+            first_index = keys[values.index(edges[node, neighbor,0]['ptype'])]
             del index_map[first_index]
 
             neighbor_label = nodes[neighbor]['ext_label']
             # Leaf Case
-            if neighbor_label is not None:
+            if neighbor_label >= 0:
                 rat = rat.kinematic_replacement({first_index: [[1,
                                                 neighbor_label], ]})
                 rat = rat.kinematic_replacement({-first_index: [[1,
@@ -218,7 +223,7 @@ class Diagram(object):
         parent_label = nodes[parent]['ext_label']
 
         # Root Case
-        if parent_label is not None:
+        if parent_label >= 0:
             rat = rat.kinematic_replacement({parent_index: [[1,
                                             parent_label], ]})
             rat = rat.tensor_index_replacement(parent_index, parent_label)
@@ -232,8 +237,8 @@ class Diagram(object):
         # Generic Case
         else:
             # Copy and relabel the upstream propagator.
-            upstream_propagator = self.propagators[edges[node,
-                                                   parent]['ptype']]
+            #Hack: need to generalize for multigraphs
+            upstream_propagator = self.propagators[edges[node,parent,0]['ptype']]
             label_counter += 1
             propagator_index_1 = label_counter
             upstream_propagator = upstream_propagator.kinematic_replacement(
@@ -418,10 +423,10 @@ class DRing(object):
     #     return full_iso_dict
 
 
-def labels_to_ext(self,g):
-    return hmap({l:g.nodes[l]['ext_label'] for l in g.nodes if g.nodes[l]['ext_label'] != None})
+def labels_to_ext(g):
+    return hmap({l:g.nodes[l]['ext_label'] for l in g.nodes if g.nodes[l]['ext_label'] >= 0})
 
-def isomap_to_ext(self,isomap,labels_to_ext):
+def isomap_to_ext(isomap,labels_to_ext):
     return hmap({labels_to_ext[l]:labels_to_ext[isomap[l]] for l in labels_to_ext})
 
 def isomorphism_classification(diagrams):
@@ -467,7 +472,7 @@ def isomorphism_classification(diagrams):
     """
     print("IN IC0")
     classes = hmap()
-    labels_to_ext = hmap()
+    nodelabels_to_extlabels = hmap()
 
     print("IN IC")
 
@@ -483,47 +488,161 @@ def isomorphism_classification(diagrams):
         #diagram to construct its isomorphs.
 
         #Canonization
-        print(f'type(d.G): {type(d.G)}')
-        print(repr(d.G))
-        print(f'd.G.nodes: {d.G.nodes}')
-        for node in d.G.nodes:
-            print('============================================================')
-            print(f'type(node): {type(node)}')
-            print(f'node: {node}')
+        # print(f'type(d.G): {type(d.G)}')
+        # print(repr(d.G))
+        # print(f'd.G.nodes: {d.G.nodes}')
+        # for node in d.G.nodes:
+        #     print('============================================================')
+        #     print(f'type(node): {type(node)}')
+        #     print(f'node: {node}')
+        #
+        #     print(f'type(multiplicity): {type(d.G.nodes[node]["multiplicity"])}')
+        #     print(f'multiplicity: {d.G.nodes[node]["multiplicity"]}')
+        #
+        #     print(f'type(oplist): {type(d.G.nodes[node]["oplist"])}')
+        #     print(f'oplist: {d.G.nodes[node]["oplist"]}')
+        #
+        #     print(f'type(opmap): {type(d.G.nodes[node]["opmap"])}')
+        #     print(f'opmap: {d.G.nodes[node]["opmap"]}')
+        #
+        #     print(f'type(unbound_opmap): {type(d.G.nodes[node]["unbound_opmap"])}')
+        #     print(f'unbound_opmap: {d.G.nodes[node]["unbound_opmap"]}')
+        #
+        #     print(f'type(ext_label): {type(d.G.nodes[node]["ext_label"])}')
+        #     print(f'ext_label: {d.G.nodes[node]["ext_label"]}')
+        #
+        #     print(f'type(mrational): {type(d.G.nodes[node]["mrational"])}')
+        #     print(f'mrational: {d.G.nodes[node]["mrational"]}')
+        #
+        #     print(f'type(name): {type(d.G.nodes[node]["name"])}')
+        #     print(f'name: {d.G.nodes[node]["name"]}')
+       
 
-            print(f'type(multiplicity): {type(d.G.nodes[node]["multiplicity"])}')
-            print(f'multiplicity: {d.G.nodes[node]["multiplicity"]}')
+        # Cache node label -> external label mapping.
+        #nodes_to_ext = labels_to_ext(d.G)
 
-            print(f'type(oplist): {type(d.G.nodes[node]["oplist"])}')
-            print(f'oplist: {d.G.nodes[node]["oplist"]}')
+       
+        nty.gprint(d.G)
+        ext_nodes = [node for node in d.G.nodes if d.G.nodes[node]['ext_label']>=0]
+        n_ext = len(ext_nodes)
+        int_nodes = [node for node in d.G.nodes if d.G.nodes[node]['ext_label']<0]
+        index_to_node = {i:node for i,node in enumerate(sorted(ext_nodes))}
+        index_to_node.update({(i+n_ext):node for i,node in enumerate(sorted(int_nodes))})
+        node_to_index = {val:key for key,val in index_to_node.items()}
+        print(f"index_to_node:    {index_to_node}")
 
-            print(f'type(opmap): {type(d.G.nodes[node]["opmap"])}')
-            print(f'opmap: {d.G.nodes[node]["opmap"]}')
+        # Homogenize external vertex labels.
+        g = HMultiGraph(nx.relabel_nodes(d.G,node_to_index,copy=True))
+        node_to_ext = {node:g.nodes[node]['ext_label'] for node in range(n_ext)}
+        ext_to_node = {ext:node for node,ext in node_to_ext.items()}
+        for node in g.nodes:
+            if g.nodes[node]['ext_label'] >= 0:
+                g.nodes[node]['ext_label'] = 1
+        print(f"node_to_ext:    {node_to_ext}")
 
-            print(f'type(unbound_opmap): {type(d.G.nodes[node]["unbound_opmap"])}')
-            print(f'unbound_opmap: {d.G.nodes[node]["unbound_opmap"]}')
+        # # Canonize graph.
+        # # Don't mix external and internal node labels
+        # hostgraphs = dict()
+        g_canonical, autgens, canonical_map = nty.canonize_multigraph(g,
+                                                color_sort_conditions=[('ext_label',1)])
+                                                # hostgraphs = hostgraphs)
+        # g_canonical, autgens, canonical_map = nty.canonize_multigraph(g,
+        #                                         color_sort_conditions=[])
+        # mg_perm_host = hostgraphs['host']
+        # mg_perm_host_canonical = hostgraphs['host_canonical']
+        # #Draw graphs.
+        # def draw_diagram(_g,title=''):
+        #     #g = _g.copy()
+        #     g = nx.relabel_nodes(_g,{node: f"{node}:{_g.nodes[node].get('ext_label','')}" for node in _g.nodes}, copy=True)
+        #
+        #     g.graph['node']={'shape':'circle'}
+        #     for node in g.nodes:
+        #         if g.nodes[node].get("ext", False) == True:
+        #             g.nodes[node]["shape"] = "triangle"
+        #         if g.nodes[node].get("type", "vertex") == "edge":
+        #             g.nodes[node]["shape"] = "square"
+        #     nty.gdraw(g,title=title)
+        #     return
 
-            print(f'type(ext_label): {type(d.G.nodes[node]["ext_label"])}')
-            print(f'ext_label: {d.G.nodes[node]["ext_label"]}')
 
-            print(f'type(mrational): {type(d.G.nodes[node]["mrational"])}')
-            print(f'mrational: {d.G.nodes[node]["mrational"]}')
+        # Restore external vertex labels.
+        for node in g_canonical.nodes:
+            if g_canonical.nodes[node]['ext_label'] >= 0:
+                g_canonical.nodes[node]['ext_label'] = node_to_ext[node]
+    
+        # Mod out auts
+        Gp = SymmetricGroup(n_ext)
+        restr_auts = [Permutation([aut[node] for node in range(n_ext)]) for aut in autgens]
+        Aut = PermutationGroup(restr_auts)
+        restr_canmap = [canonical_map[node] for node in range(n_ext)]
+        canonical_perm = Permutation(restr_canmap)
+        canonical_perm_mod_aut = ~(Gp._coset_representative(~canonical_perm,Aut))
 
-            print(f'type(name): {type(d.G.nodes[node]["name"])}')
-            print(f'name: {d.G.nodes[node]["name"]}')
 
-        g_canonical, autgens, isomap_from_canon = canonize_multigraph(d.G)
+        # Convert canonical node map to external label map.
+        ext_canonical_map = hmap({ext:node_to_ext[canonical_perm(node)] for ext,node in ext_to_node.items()})
+        ext_canonical_map_mod_aut = hmap({ext:node_to_ext[canonical_perm_mod_aut(node)] for ext,node in ext_to_node.items()})
 
-        #Compute label -> ext_label map for g_canonical and cache.
-        labels_to_ext.setdefault(g_canonical,self.labels_to_ext(g_canonical))
+        print("nty_autgens")
+        print(autgens)
+        print("Aut")
+        print(Aut)
+        print()
+        print(f"ext_canonical_map:            {ext_canonical_map}")
+        print(f"ext_canonical_map_mod_aut:    {ext_canonical_map_mod_aut}")
+        #nty.gprint(g)
 
-        #Compute isomap -> ext_isomap for d.G
-        ext_isomap = self.isomap_to_ext(isomap_from_canon,labels_to_ext[g_canonical])
+        # ax1 = plt.subplot(221)
+        # draw_diagram(g,title="MultiGraph")
+        #
+        # ax2 = plt.subplot(222)
+        # draw_diagram(mg_perm_host,title="Host Graph")
+        #
+        # ax3 = plt.subplot(223)
+        # draw_diagram(mg_perm_host_canonical,title="Canonical Host Graph")
+        #
+        # ax4 = plt.subplot(224)
+        # draw_diagram(g_canonical,title="Canonical MultiGraph")
+        #
+        # plt.show()
 
-        #Initialize and increment the entry for [g_canonical][ext_isomap] in classes.
+        # ax1 = plt.subplot(211)
+        # draw_diagram(hostgraphs['mg_z'],title="mg_z")
+        #
+        # ax2 = plt.subplot(212)
+        # draw_diagram(hostgraphs['g_z'],title="g_z")
+        # plt.show()
+    
+        # print("canonical")
+        # nty.gprint(g_canonical)
+        # print("canonical")
+        # print("nty_autgens")
+        # print(autgens)
+        # print("Aut")
+        # print(Aut)
+        # draw_graphs([g_canonical,])
+        #
+        # print("rawgraph")
+        # nty.gprint(g)
+        # print("rawgraph")
+        # print("nty_autgens")
+        # print(autgens)
+        # print("Aut")
+        # print(Aut)
+        # print()
+        # print(f"ext_canonical_map:            {ext_canonical_map}")
+        # print(f"ext_canonical_map_mod_aut:    {ext_canonical_map_mod_aut}")
+        # Restore external vertex labels.
+        # for node in g.nodes:
+        #     if g.nodes[node]['ext_label'] >= 0:
+        #         g.nodes[node]['ext_label'] = node_to_ext[node]
+        # draw_graphs([g,])
+
+
+        #Initialize and increment the entry for [g_canonical][ext_canonical_map] in classes.
         classes.setdefault(g_canonical,hmap())
-        classes[g_canonical].setdefault(ext_isomap,0)
-        classes[g_canonical][ext_isomap] += 1
+        classes[g_canonical].setdefault(ext_canonical_map_mod_aut,0)
+        classes[g_canonical][ext_canonical_map_mod_aut] += 1
 
     return classes
 
@@ -597,16 +716,16 @@ def compute_contractions(vertices, propagators, external_legs, tensor_symmetries
     # FIXME: need a sensible docstring
     # Grab the identity polynomials from a propagator
     # MRational.
-    # p_one = propagators.values()[0].nd_list[0][0].Mdict.values()[0].one
-    p_one = list(propagators.values())[0].nd_list[0][0].PolyOne()
-    # p_zero = propagators.values()[0].nd_list[0][0].Mdict.values()[0].zero
-    p_zero = list(propagators.values())[0].nd_list[0][0].PolyZero()
+    # p_one = propagators.values()[0].nd_list[0][0].mdict.values()[0].one
+    p_one = hlist(propagators.values())[0].nd_list[0][0].poly_one()
+    # p_zero = propagators.values()[0].nd_list[0][0].mdict.values()[0].zero
+    p_zero = hlist(propagators.values())[0].nd_list[0][0].poly_zero()
     # Define the multiplicative identity in the MRational field.
-    rat_one = MRational([[MRing({((0, 0),): p_one}),
-                        {MRing({((0, 0),): p_one}): 1}], ])
+    rat_one = MRational(hlist([hlist([MRing(hmap({((0, 0),): p_one})),
+                        hmap({MRing(hmap({((0, 0),): p_one})): 1})]), ]))
     # Define the additive identity in the MRational field.
-    rat_zero = MRational([[MRing({((0, 0),): p_zero}),
-                         {MRing({((0, 0),): p_one}): 1}], ])
+    rat_zero = MRational(hlist([hlist([MRing(hmap({((0, 0),): p_zero})),
+                         hmap({MRing(hmap({((0, 0),): p_one})): 1})]), ]))
 
     # Generate internal vertex DRing list.
     internal_list = []
@@ -623,12 +742,22 @@ def compute_contractions(vertices, propagators, external_legs, tensor_symmetries
                    oplist=hlist(oplist),
                    opmap=opmap,
                    unbound_opmap=hmap(opmap),
-                   ext_label=None,
+                   ext_label=(-1),
                    mrational=MRational(r),
                    name=name)
         internal_list.append(G)
         label_counter += 1
     print("Done int DRING")
+    print("===============VERTICES===================")
+    for G in internal_list:
+        for node in G.nodes:
+            print(f'node: {node}    att: {G.nodes[node]}')
+        for edge in G.edges:
+            print(f'edge: {edge}    att: {G.edges[edge]}')
+        print()
+        #nty.gdraw(G)
+        #draw_graphs([G, ], waittime=2)
+    print("======================================")
     # Generate external vertex DRing list.
     external_list = []
     root_vertex = None
@@ -644,12 +773,22 @@ def compute_contractions(vertices, propagators, external_legs, tensor_symmetries
                    unbound_opmap=hmap({ptype: 1}),
                    ext_label=ext_label,
                    mrational=rat_one,
-                   name=None)
+                   name='')
         external_list.append(G)
         symbolblocks.append([-ext_label, ext_label])
         ext_label += 1
     # Use the largest ext_label as the root node label
-    root_label = ext_label-1
+    #root_label = ext_label-1
+    print("===============EXTVERTICES===================")
+    for G in external_list:
+        for node in G.nodes:
+            print(f'node: {node}    att: {G.nodes[node]}')
+        for edge in G.edges:
+            print(f'edge: {edge}    att: {G.edges[edge]}')
+        print()
+        #nty.gdraw(G)
+        #draw_graphs([G, ], waittime=2)
+    print("======================================")
 
     print("Done ext DRING")
 
@@ -669,6 +808,10 @@ def compute_contractions(vertices, propagators, external_legs, tensor_symmetries
     if len(diagrams) == 0:
         # print "ZERORETURN"
         return rat_zero
+    # print("======================================")
+    # for d in diagrams:
+    #     draw_graphs([d.G, ], waittime=2)
+    # print("======================================")
 
     # iso = Isomorphism()
     # for i in tqdm([1, ], desc="Internal Isomorphism"):
@@ -704,36 +847,49 @@ def compute_contractions(vertices, propagators, external_legs, tensor_symmetries
 
     contraction_sum = MRational(rat_zero)
     # for key,value in tqdm(ext_iso_dict.items(),desc="Computing MRationals"):
+
+    print("======================================")
     for g_canon, isomaps in classes.items():
         draw_graphs([g_canon, ], waittime=2)
+        print(f"isomaps:   {isomaps}")
+    print("======================================")
+    for g_canon, isomaps in classes.items():
+        #draw_graphs([g_canon, ], waittime=2)
         d_canon = Diagram(g_canon, propagators)
         # print key_diagram
-        #for i in tqdm([1, ], desc="Construct MRational Expression"):
-        rat_canon = d_canon.compute_mrational(root_label)
-        #for i in tqdm([1, ], desc="Canonicalize Tensor Indices"):
-        rat_canon = rat_canon.canonize_indices(len(external_legs))
-        #for i in tqdm([1, ], desc="Sort Symmetric Tensor Indices"):
-        rat_canon = rat_canon.sort_indices(tensor_symmetries)
-        #for i in tqdm([1, ], desc="collect Terms"):
-        rat_canon = rat_canon.collect()
+        root_label = 0
+        for i in tqdm([1, ], desc="Construct MRational Expression"):
+            rat_canon = d_canon.compute_mrational(root_label)
+        for i in tqdm([1, ], desc="Canonicalize Tensor Indices"):
+            rat_canon = rat_canon.canonize_indices(len(external_legs))
+        for i in tqdm([1, ], desc="Sort Symmetric Tensor Indices"):
+            rat_canon = rat_canon.sort_indices(tensor_symmetries)
+        for i in tqdm([1, ], desc="collect Terms"):
+            rat_canon = rat_canon.collect()
 
         #coefficient = value[0]
         #for blockmap in tqdm(value[1], desc="External Label Permutations"):
         # for blockmap in value[1]:
-        #     perm_key_rat = key_rat.BlockReplacement(blockmap, symbolblocks)
+        #     perm_key_rat = key_rat.block_replacement(blockmap, symbolblocks)
         #     contraction_sum += perm_key_rat*coefficient
         for isomap,count in isomaps.items():
-            rat_isomorph = key_canon.BlockReplacement(isomap, symbolblocks)
+            rat_isomorph = rat_canon.block_replacement(isomap, symbolblocks)
             contraction_sum += rat_isomorph*count
 
     return contraction_sum
 
 
 def evolution_expansion(symbol_list, g_order):
-    # Compute the taylor series of the time evolution operator U
-    # to order [g_order] in the perturbative parameter g, as well
-    # as a set of operator coefficients, all of which are contained
-    # in [symbol_list].
+    """ Expand the time evolution operator U to order ``g_order`` in the
+    perturbative parameter ``g``.
+
+    Args:
+        symbol_list (list): A list of operator coefficients, ordered so that ``symbol_list[i]`` corresponds to the coefficient of ``g^i``.
+
+    Returns:
+        U_series (sympy.series): An expansion of ``U`` to order ``g_order``. 
+
+    """
     g = symbol_list[0]
     f = poly(0, symbol_list, domain='QQ_I')
     for i in range(1, g_order+1):
@@ -766,13 +922,13 @@ def compute_tree_amplitude(interactions,
     print("IN CTA")
     # Grab the identity polynomials from an interaction
     # MRational.
-    # p_one = interactions[0][3].nd_list[0][0].Mdict.values()[0].one
-    p_one = interactions[0][3].nd_list[0][0].PolyOne()
-    # p_zero = interactions[0][3].nd_list[0][0].Mdict.values()[0].zero
-    p_zero = interactions[0][3].nd_list[0][0].PolyZero()
+    # p_one = interactions[0][3].nd_list[0][0].mdict.values()[0].one
+    p_one = interactions[0][3].nd_list[0][0].poly_one()
+    # p_zero = interactions[0][3].nd_list[0][0].mdict.values()[0].zero
+    p_zero = interactions[0][3].nd_list[0][0].poly_zero()
     # Define the additive identity in the MRational field.
-    rat_zero = MRational([[MRing({((0, 0),): p_zero}),
-                         {MRing({((0, 0),): p_one}): 1}], ])
+    rat_zero = MRational(hlist([hlist([MRing(hmap({((0, 0),): p_zero})),
+                         hmap({MRing(hmap({((0, 0),): p_one})): 1})]), ]))
 
     # First, sort the interaction operators by the associated power of g,
     # the perturbative parameter.
@@ -800,9 +956,14 @@ def compute_tree_amplitude(interactions,
     g = symbols('g')
     symbol_list = [g, ]+[symbols("O_"+str(i)) for i in range(1, g_order+1)]
     U_series = evolution_expansion(symbol_list, g_order)
+    print("USERIES")
+    print(U_series)
+
 
     # Extract the coefficient of the g^g_order term.
     tree_term = U_series.coeff(g**g_order).as_poly(domain='QQ_I')
+    print("TREETERM")
+    print(tree_term)
 
     #print("TREETERM")
     #print(tree_term)
@@ -842,6 +1003,12 @@ def compute_tree_amplitude(interactions,
 
         vertex_lists = list(itertools.product(*interaction_list_factors))
 
+        print(f"monomial_tuple: {monomial_tuple}    coefficient: {coefficient}")
+        print(f"g_ordered_interactions:    {g_ordered_interactions}")
+        print(f"interaction_list_factors:    {interaction_list_factors}")
+        print(f"vertex_lists: {vertex_lists}")
+
+
         # FIXME: we can collect terms in these set product to save time.
         # That's an optimization for later.
         # Finally, we compute the sum of all contractions of each vertex list,
@@ -858,6 +1025,7 @@ def compute_tree_amplitude(interactions,
                                           propagators,
                                           external_legs,
                                           tensor_symmetries)
+
             diagram *= coefficient
             amplitude += diagram
         print("done compute_contractions")
@@ -871,11 +1039,11 @@ def compute_tree_amplitude(interactions,
 # 	print amplitude
 # 	print "12swap-----------------------"
 # 	symbolblocks = [[-1,],[-2,],[-3,],[-4,]]
-# 	swapped = amplitude.BlockReplacement({1:2,2:1,3:3,4:4},symbolblocks)
+# 	swapped = amplitude.block_replacement({1:2,2:1,3:3,4:4},symbolblocks)
 # 	delta = swapped-amplitude
 # 	delta = delta.OnShell()
 # 	delta = delta.EjectMasses()
-# 	delta = delta.ZeroMasses((symbols('m_4'),))
+# 	delta = delta.zero_masses((symbols('m_4'),))
 # 	delta = delta.GroupMasses({(symbols('m_1'),):symbols('m_{i1}')})
 # 	delta = delta.GroupMasses({(symbols('m_2'),):symbols('m_{i2}')})
 # 	delta = delta.GroupMasses({(symbols('m_3'),):symbols('m_{i3}')})

@@ -3,6 +3,7 @@ from functools import reduce
 from mring import MRing
 from sympy import poly, symbols, Rational
 import sys
+from hashable_containers import hmap
 
 """
 CRUCIAL NOTE: the new permute_blocks function bakes in the i,i+100 representation of pairs of rank-2 polarizations! Need to be careful when running old code that uses the i,i+10 representation.
@@ -84,7 +85,7 @@ def orbit(r,perms,symbolblocks,signed=False,source_prefix='f',target_prefix='f')
 	its orbit under (perms), either signed or unsigned, 
 	depending on (signed).
 	"""
-	orbit = MRing({})
+	orbit = MRing(hmap())
 	for perm in perms:
 		orbit+=permute_blocks(r,perm,symbolblocks,signed,source_prefix,target_prefix)
 	return orbit
@@ -188,13 +189,13 @@ def monomial_signature(monomial,symbolblocks,cyclic=False):
 	remove ``leg labeling'' redundancies in amplitudes.
 	"""
 	x = symbols('x')
-	r = MRing({monomial:poly(1,x,domain='QQ_I')})
+	r = MRing(hmap({monomial:poly(1,x,domain='QQ_I')}))
 	if cyclic==True:
 		orbit = cyclic_orbit(r,symbolblocks)
 	else:
 		orbit = symmetric_orbit(r,symbolblocks)
 	tags=[]
-	monomials = orbit.Mdict.keys()
+	monomials = orbit.mdict.keys()
 	monotags = tuple([monomial_tag(mono,symbolblocks) for mono in monomials])
 	signature = minimal_tag(monotags)
 	return signature
@@ -206,9 +207,9 @@ def canonical_monomial(monomial,symbolblocks):
 	the preimage of the minimal tag over its orbit.
 	"""
 	x = symbols('x')
-	r = MRing({monomial:poly(1,x,domain='QQ_I')})
+	r = MRing(hmap({monomial:poly(1,x,domain='QQ_I')}))
 	orbit = symmetric_orbit(r,symbolblocks)
-	monomials = orbit.Mdict.keys()
+	monomials = orbit.mdict.keys()
 	tagdict = {}
 	for mono in monomials:
 		tagdict[monomial_tag(mono,symbolblocks)] = mono

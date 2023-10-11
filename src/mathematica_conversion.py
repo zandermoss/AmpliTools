@@ -71,7 +71,7 @@ def tensor_poly_to_mathematica(r):
 
 
     #Extract the numerator poly string and replace.
-    pstring = str(list(r_num.Mdict.values())[0].as_expr())
+    pstring = str(list(r_num.mdict.values())[0].as_expr())
 
     target_string = pstring
     for src,tar in string_map.items():
@@ -107,7 +107,7 @@ def subspace_tensor_poly_to_mathematica(r):
 
 
     #Extract the numerator poly string and replace.
-    pstring = str(list(r_num.Mdict.values())[0].as_expr())
+    pstring = str(list(r_num.mdict.values())[0].as_expr())
 
     target_string = pstring
     for src,tar in string_map.items():
@@ -143,7 +143,7 @@ def subspace_tensor_poly_to_sage(r):
 
 
     #Extract the numerator poly string and replace.
-    pstring = str(list(r_num.Mdict.values())[0].as_expr())
+    pstring = str(list(r_num.mdict.values())[0].as_expr())
 
     target_string = pstring
     for src,tar in string_map.items():
@@ -171,8 +171,8 @@ def edge_tuple_to_pestring(edges):
 
 def mring_to_mathematica_pe(ring):
     string = ""
-    for key in ring.Mdict.keys():
-        string += "("+sympy_poly_to_mathematica(ring.Mdict[key])+")"
+    for key in ring.mdict.keys():
+        string += "("+sympy_poly_to_mathematica(ring.mdict[key])+")"
         edgestring = edge_tuple_to_pestring(key)
         if edgestring=="":
             string+=edgestring+"+"
