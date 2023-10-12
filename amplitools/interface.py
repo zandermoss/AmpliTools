@@ -1,5 +1,7 @@
 from mring import MRing
 from mrational import MRational
+from permutation_tools import symmetric_partition_permutations
+from signed_permutations import SignedPermutationGroup, SignedPermutation
 from sympy import *
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -7,8 +9,6 @@ from IPython.display import Markdown, display, clear_output, Math
 from functools import cmp_to_key
 import time
 import math
-from permutation_tools import symmetric_partition_permutations
-from signed_permutations import SignedPermutationGroup, SignedPermutation
 import re
 from hashable_containers import hmap,hlist
 
@@ -17,10 +17,8 @@ class Interface(object):
     """An interface between ``amplitools`` and ``jupyter``.
 
     Provides input methods converting from simple notebook syntax to ``MRing`` and 
-    ``MRational`` objects, output methods converting ``MRing`` and ``MRational``
-    objects to LaTeX expressions (and typesetting them), and a convenience method
-    for drawing nicely formatted Feynman diagrams.
-
+    ``MRational`` objects, as well as output methods converting ``MRing`` and ``MRational``
+    objects to LaTeX expressions (and typesetting them). 
     """
 
     def __init__(self,momentum_symbols,polarization_symbols,coefficient_symbols,
@@ -189,6 +187,8 @@ class Interface(object):
 
 
 def draw_graphs(nx_graph_list,waittime=0.2,ext=True):
+    """Draw nicely formatted networkx graphs."""
+
     #First, determine the number of external legs and
     #Compute an appropriate circular spring layout for them.
     mygraph = nx_graph_list[0]
