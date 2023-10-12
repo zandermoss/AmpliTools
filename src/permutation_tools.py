@@ -5,9 +5,9 @@ from sympy import poly, symbols, Rational
 import sys
 from hashable_containers import hmap
 
-"""
-CRUCIAL NOTE: the new permute_blocks function bakes in the i,i+100 representation of pairs of rank-2 polarizations! Need to be careful when running old code that uses the i,i+10 representation.
-"""
+
+"""Functions for permutation group action on various ``amplitools`` objects"""
+
 
 def get_cycles(perm):
 	"""

@@ -1,9 +1,11 @@
-#! /usr/bin/python
-
 import tensor_tools
 from functools import reduce
 
-#-----------------------Function Definitions----------------------#
+
+"""Utilities for conversion of ``MRational``, ``MRing``, and ``sympy.poly``
+expressions to and from a format compatible with Mathematica.
+
+"""
 
 
 def format_indices(source_string,delimiters):

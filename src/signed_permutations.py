@@ -1,7 +1,5 @@
-
-
-
 class SignedPermutation():
+    """A container for Bosonic and Fermionic symmetries."""
     def __init__(self,_permlist,_sign):
         self.permlist = _permlist
         self.sign = _sign
@@ -90,6 +88,11 @@ class SignedPermutation():
 
 
 class SignedPermutationGroup():
+    """A container for *groups* of Bosonic or Fermionic symmetries.
+
+    Provides methods for canonical labeling of ``MRing`` and ``MRational`` objects
+    under particle exchange. 
+    """
 
     def generate(self,element):
         for generator in self.generators:
@@ -155,7 +158,7 @@ class SignedPermutationGroup():
         and all other permutations are ordered based on "how well" they approximate
         an ascending sort.
 
-        Why play this abstract, nonsense game? Given a tensor with a (potentially)
+        Given a tensor with a (possibly)
         signed index symmetry, we can take any index tuple ituple and find a canonical
         ordering together with the permutation (and its sign!) required to get us
         there. This allows us to systematically exploit tensor symmetries to simplify

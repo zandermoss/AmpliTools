@@ -14,6 +14,15 @@ from hashable_containers import hmap,hlist
 
 
 class Interface(object):
+    """An interface between ``amplitools`` and ``jupyter``.
+
+    Provides input methods converting from simple notebook syntax to ``MRing`` and 
+    ``MRational`` objects, output methods converting ``MRing`` and ``MRational``
+    objects to LaTeX expressions (and typesetting them), and a convenience method
+    for drawing nicely formatted Feynman diagrams.
+
+    """
+
     def __init__(self,momentum_symbols,polarization_symbols,coefficient_symbols,
                  coefficient_display_map):
         #Sort symbols
@@ -259,7 +268,9 @@ def draw_graphs(nx_graph_list,waittime=0.2,ext=True):
         #clear_output(wait=True)
         time.sleep(waittime)
 
+
 class FeynmanRules():
+    """A container for the Feynman rules arising from an action."""
     def __init__(self,tensor_symmetries,io):
         self.tensor_symmetries = tensor_symmetries
         self.io = io
@@ -302,6 +313,7 @@ class FeynmanRules():
 
 
 class TensorSymmetries():
+    """A container for the symmetry groups of color tensors."""
     def __init__(self):
         self.tensor_symmetries = {}
 

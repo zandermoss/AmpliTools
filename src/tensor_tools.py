@@ -6,6 +6,13 @@ from functools import reduce
 from tqdm import tqdm
 import sympy
 
+
+"""Functions for manipulating tensors appearing in ``MRational``, ``MRing``,
+and ``sympy.poly`` objects.
+
+"""
+
+
 def split_tensor_symbol(symbol):
     symstring = symbol.__str__()
     assert "_{" in symstring, "Symbol does not represent a tensor!"

@@ -8,37 +8,15 @@ from functools import reduce
 from tensor_tools import split_tensor_symbol, target_index, first_matching_index
 from hashable_containers import hmap,hlist
 
-#Some functions for comparison of denominator dictionaries (keyed by MRing objects).
-
-
-def is_dict_contained(_x,_y):
-    x = dict(_x)
-    y = dict(_y)
-    for xkey in x.keys():
-        if xkey in y.keys():
-            if x[xkey] != y[xkey]:
-                return False
-            else:
-                del y[xkey]
-        else:
-            return False
-    return True
-
-
-def is_dict_equal(x,y):
-    return is_dict_contained(x,y) and is_dict_contained(y,x)
-
-
-def is_dict_in_list(x,l):
-    if len(l)==0:
-        return -1
-    for i,y in enumerate(l):
-        if is_dict_equal(x,y):
-            return i
-    return -1
-
 
 class MRational(object):
+    """The fraction field over ``MRing``
+
+    AmpliTools represents tree amplitudes as MRationals. In the same spirit as MRing,
+    MRational provides methods for reduction and manipulation of flavor and kinematics,
+    while overloading the expected field operators, so MRationals are "transparently rational".
+
+    """
 
     def __init__(*_arg):
         self=_arg[0]
@@ -151,7 +129,6 @@ class MRational(object):
                         if count>1 and (ipair not in denominator_index_map.keys()):
                             denominator_index_map[ipair]=index_counter
                             index_counter+=1
-
             numerator_terms = []
             #Numerator-only contractions.
             for mkey,poly in pair[0].mdict.items():
@@ -176,7 +153,6 @@ class MRational(object):
                     if not s.is_empty():
                         numerator_terms.append(s)
             numerator = reduce(lambda x,y: x+y, numerator_terms)
-
             #Make the replacments laid out in index_map.
             q = MRational(hlist([hlist([numerator,pair[1]]),]))
             for ipair,target in denominator_index_map.items():
@@ -185,7 +161,6 @@ class MRational(object):
             nd_list+=q.nd_list
         rat = MRational(nd_list)
         rat = rat.collect()
-
         return rat
 
 
@@ -207,8 +182,6 @@ class MRational(object):
                             for index in self.indices_from_symbol(symbol):
                                 denominator_index_counts.setdefault(index,0)
                                 denominator_index_counts[index]+=count*power
-
-
             #Iterate over numerator terms and detect index multiplets.
             #add multiplet indices to the index_map.
             for mkey,poly in pair[0].mdict.items():
@@ -222,7 +195,6 @@ class MRational(object):
                         if count>1 and (index not in denominator_index_map.keys()) and (index>max_ext_label):
                             denominator_index_map[index]=index_counter
                             index_counter+=1
-
             numerator_terms = []
             #Numerator-only contractions.
             for mkey,poly in pair[0].mdict.items():
@@ -244,16 +216,13 @@ class MRational(object):
                     if not s.is_empty():
                         numerator_terms.append(s)
             numerator = reduce(lambda x,y: x+y, numerator_terms)
-
             #Make the replacments laid out in index_map.
             q = MRational(hlist([hlist([numerator,pair[1]]),]))
             for source,target in denominator_index_map.items():
                     q = q.tensor_index_replacement(source,target,target_prefix='b')
-
             nd_list+=q.nd_list
         rat = MRational(nd_list)
         rat = rat.collect()
-
         return rat
 
 
@@ -286,80 +255,6 @@ class MRational(object):
                             source_prefix=source,target_prefix=target)
             target_rat+=rat_term
         return target_rat
-
-
-    # def NDPairTensorGetPrefixIndex(self,pair,prefix):
-    #     bound_index = pair[0].TensorGetPrefixIndex(prefix)
-    #     if bound_index != False:
-    #         return bound_index
-    #     for key in pair[1].keys():
-    #         bound_index = key.TensorGetPrefixIndex(prefix)
-    #         if bound_index != False:
-    #             return bound_index
-    #     return False
-    #
-    # def SplitRational(self,rat):
-    #     target_rat = MRational([],rat.basis)
-    #     for pair in rat.nd_list:
-    #         bound_index = self.NDPairTensorGetPrefixIndex(pair,'b')
-    #         if bound_index==False:
-    #             target_rat+=MRational([pair,],rat.basis)
-    #         else:
-    #             rat1 = MRational([pair,],rat.basis)
-    #             rat2 = MRational([pair,],rat.basis)
-    #             rat1 = rat1.tensor_index_replacement(bound_index,bound_index,source_prefix='b',target_prefix='z')
-    #             rat2 = rat2.tensor_index_replacement(bound_index,bound_index,source_prefix='b',target_prefix='w')
-    #             target_rat+=self.SplitRational(rat1+rat2)
-    #     return target_rat
-    #
-    #
-    # def BranchPrefix(self,source_prefix,target_prefixes):
-    #     #FALSE: need to turn pairs into MRational objects!
-    #     target_rat = MRational([],self.basis)
-    #     for pair in self.nd_list:
-    #         for key,poly in pair[0].mdict.values():
-    #             term_ring = MRing({key:poly})
-    #             term_rat = MRational([])
-    #         working_rat = MRational([],self.basis)
-    #         source_index = self.NDPairTensorGetPrefixIndex(pair, source_prefix)
-    #         if source_index == False:
-    #             target_rat += MRational([pair,],self.basis)
-    #         else:
-    #             for target in target_prefixes:
-    #                 working_rat += MRational([pair,],self.basis).tensor_index_replacement(source_index,source_index,source_prefix=source_prefix,target_prefix=target)
-    #             target_rat += working_rat.BranchPrefix(source_prefix,target_prefixes)
-    #     return target_rat
-    #
-    #
-    # def BranchIndex(self,source_prefix,target_prefix,target_indices):
-    #     target_rat = MRational([],self.basis)
-    #     for pair in self.nd_list:
-    #         working_rat = MRational([],self.basis)
-    #         source_index = self.NDPairTensorGetPrefixIndex(pair, source_prefix)
-    #         if source_index == False:
-    #             target_rat += MRational([pair,],self.basis)
-    #         else:
-    #             for target in target_indices:
-    #                 working_rat += MRational(pair,self.basis).tensor_index_replacement(source_index,target,source_prefix=source_prefix,target_prefix=target_prefix)
-    #             target_rat += working_rat.BranchPrefix(source_prefix,target_prefix,target_indices)
-    #     return target_rat
-    #
-    # def branch_free_index(self,source_prefix,target_prefix,target_indices):
-    #     #We need to assume that all pairs have the same set of free indices.
-    #     #Otherwise, the tensor constraints are inconsistent.
-    #     exprs = []
-    #     source_index = self.NDPairTensorGetPrefixIndex(self.nd_list[0],
-    #                                                    source_prefix)
-    #     if source_index == False:
-    #         exprs.append(self)
-    #     else:
-    #         for target in target_indices:
-    #             working_rat = self.tensor_index_replacement(source_index,
-    #                             target,source_prefix=source_prefix,
-    #                             target_prefix=target_prefix)
-    #             exprs += working_rat.branch_free_index(source_prefix,
-    #                                                target_prefix,target_indices)
-    #     return exprs
 
 
     def first_matching_pair_index(self,pair,pattern,match):
@@ -447,7 +342,6 @@ class MRational(object):
             assert pattern not in targets,"Pattern in targets, recursion will never terminate!"
         else:
             assert False, "[match] must be one of prefix,suffix,index"
-
         #Need to expand over all numerator poly terms.
         expanded_rat = self.expand()
         target_rat = expanded_rat.branch_bound_index(pattern,targets,match)
@@ -535,10 +429,6 @@ class MRational(object):
         return self.apply_to_mring(lambda r: MRing.tensor_index_replacement(r,source,
                                                 target,source_prefix,target_prefix))
 
-#    def canonize_bound_indices(self):
-#        #FIXME: only run after merging nd_sums!
-#        return self.apply_to_numerators(lambda r: MRing.canonize_bound_indices(r))
-
 
     def tensor_prefix_replacement(self,source_prefix,target_prefix):
         return self.apply_to_mring(lambda r: MRing.tensor_prefix_replacement(r,
@@ -546,7 +436,7 @@ class MRational(object):
 
 
     def tensor_product_replacement(self,source,target,max_depth=False):
-        #FIXME: can't apply this when the bound indices show up in the denominator too!
+        #can't apply this when the bound indices show up in the denominator too!
         #return self.apply_to_mring(lambda r: MRing.tensor_product_replacement(r,source,target))
         #Assuming no color tensors (except masses) in denominators.
         #max_depth=1
@@ -591,7 +481,6 @@ class MRational(object):
 
 
     def sort_indices(self,tensor_symmetries):
-        #print("In SSI wrapper")
         return self.apply_to_mring(lambda r: MRing.sort_indices(r,tensor_symmetries))
 
 
@@ -605,13 +494,10 @@ class MRational(object):
         ptype = type(poly(dummy,dummy,domain='QQ_I'))
         mrtype = type(MRing(hmap()))
         domain_types = [ptype,mrtype,int]
-        #Doesn't handle imaginary numbers properly...
-        #is_sympy_number = ("sympy.core.numbers" in str(type(other)))
         is_sympy_number = ("sympy.core" in str(type(other)))
         assert (type(other) in domain_types) or is_sympy_number or (type(other) == type(self))
         if ((type(other) in domain_types) or is_sympy_number):
             r = self.apply_to_numerators(lambda r: MRing.__mul__(r,other))
-            #r,upoly = r.unify_generators()
             return r
         else:
             prodterms = hlist(product(self.nd_list,other.nd_list))
@@ -629,13 +515,11 @@ class MRational(object):
                     denominator[key]+=term[1][1][key]
                 prod_nd_list.append(hlist([numerator,denominator]))
             r = MRational(prod_nd_list)
-            #r,upoly = r.unify_generators()
             return r.collect()
 
 
     def orbit(self,perms,symbolblocks,signed=False,prefix='f'):
         orbit = MRational(hlist())
-
         #for perm in tqdm(perms,desc="Permutations"):
         for perm in perms:
             #for i in tqdm([1,],desc="ApplyPerms"):
@@ -647,7 +531,6 @@ class MRational(object):
             #orbit = orbit.add(permrat,collect=False)
             #for i in tqdm([1,],desc="add_in_place"):
             orbit.add_in_place(permrat)
-
         #for i in tqdm([1,],desc="collection"):
         orbit = orbit.collect()
         orbit = orbit.cull_zeros()
@@ -655,17 +538,15 @@ class MRational(object):
 
 
     def tensor_product_rational_replacement(self,source,target,max_depth=False):
-        #NOTE: this is a whole lot of bullshit. The problem is equivalent
-        #to subgraph isomorphism, which has much quicker implementations.
-        #need to overhaul this code to interpret a fast isomorphism algorithm.
-        #FIXME: can't apply this when the bound indices show up in the denominator too!
+        #The problem is equivalent to subgraph isomorphism, which has much
+        #quicker implementations. need to overhaul this code to interpret a
+        #fast isomorphism algorithm.
+        #can't apply this when the bound indices show up in the denominator too!
         #return self.apply_to_mring(lambda r: MRing.tensor_product_replacement(r,source,target))
         #Assuming no color tensors (except masses) in denominators.
         #max_depth=1
-
         assert len(source.as_dict())==1, "Source is not monomial."
         source_term = source.as_dict().keys()[0]
-
         mring = MRing(self.nd_list[0][0])
         source = mring.poly_tensor_prefix_replacement(source,'x','a')
         source = mring.poly_tensor_prefix_replacement(source,'y','c')
@@ -679,7 +560,6 @@ class MRational(object):
         target = target.tensor_prefix_replacement('w','g')
         target = target.tensor_prefix_replacement('f','h')
         target = target.tensor_prefix_replacement('b','k')
-
         last_rat = MRational(self)
         next_rat = MRational(hlist())
         count=0
@@ -689,7 +569,6 @@ class MRational(object):
                 for key,p in num.mdict.items():
                     for term,coefficient in p.as_dict().items():
                         result = num.match_term(term,p.gens,source_term,source.gens,0,{})
-
                         if result==False:
                             target_term = Poly({tuple(term):coefficient},p.gens,domain="QQ_I")
                             ring_term = MRing(hmap({key:target_term}))
@@ -710,15 +589,7 @@ class MRational(object):
                             next_rat += rat_target
             next_rat = next_rat.product_replacement_clean_indices()
             count+=1
-
             if not loopmatch:
-                #BAD NEWS BEARS
-                #last_rat = last_rat.tensor_prefix_replacement('a','x')
-                #last_rat = last_rat.tensor_prefix_replacement('c','y')
-                #last_rat = last_rat.tensor_prefix_replacement('d','z')
-                #last_rat = last_rat.tensor_prefix_replacement('g','w')
-                #last_rat = last_rat.tensor_prefix_replacement('g','f')
-                #last_rat = last_rat.tensor_prefix_replacement('k','b')
                 return last_rat
             if max_depth!=False and count==max_depth:
                 assert False
@@ -752,7 +623,6 @@ class MRational(object):
                             if 'm'==gen.__str__().split('_{')[0]:
                                 mass_symbols.append(gen)
         mass_symbols = list(set(mass_symbols))
-
         q = MRational(self.nd_list)
         for sym in mass_symbols:
             target = poly(sym*symbol,sym,symbol,domain='QQ_I')
@@ -773,8 +643,6 @@ class MRational(object):
             for key,val in zip(pair[1].keys(),pair[1].values()):
                 N = MRing(pair[0])
                 N *= key.partial_derivative(symbol)
-                #N *= (key**(val-1))*val
-                #N *= (-1)
                 N *= (-1)*val
                 D = hmap()
                 for newkey,newval in zip(pair[1].keys(),pair[1].values()):
@@ -808,11 +676,9 @@ class MRational(object):
                 newpoly = poly(polynomial.as_expr(),newsymbols,domain='QQ_I')
                 degrees.append(newpoly.degree(gen=z))
             my_m = max(degrees)
-
             m += my_m*power
             for mbasis,polynomial in mring.mdict.items():
                 w_polynomial = polynomial.zero
-                #new_symbols = set(list(polynomial.free_symbols)+[z,])
                 new_symbols = set(list(polynomial.gens)+[z,])
                 new_poly = poly(polynomial.as_expr(),new_symbols,domain='QQ_I')
                 degree = new_poly.degree(gen=z)
@@ -820,7 +686,6 @@ class MRational(object):
                     coeff = Rational(1,factorial(p))*(new_poly.diff((z,p))).eval(z,0)
                     coeff = poly(coeff,new_symbols,domain='QQ_I')
                     w_power = my_m-p
-                    #new_symbols = set(list(coeff.free_symbols)+[w,])
                     new_symbols = set(list(coeff.gens)+[w,])
                     newterm = poly(coeff.as_expr()*w**w_power,new_symbols,domain='QQ_I')
                     w_polynomial += newterm
@@ -833,7 +698,6 @@ class MRational(object):
     def compute_diff_map(self,numerator,z,w,w_rational,zeta,m):
         degrees = []
         for polynomial in numerator.mdict.values():
-            #newsymbols =  set(list(polynomial.free_symbols)+[z,])
             newsymbols =  set(list(polynomial.gens)+[z,])
             newpoly = poly(polynomial.as_expr(),newsymbols,domain='QQ_I')
             degrees.append(newpoly.degree(gen=z))
@@ -877,24 +741,19 @@ class MRational(object):
         # w = 1/z, so the UV pole is mapped to a pole at the origin in
         # the w-plane.
         w = symbols('w')
-
         assert not self.is_symbol_in_polys(w), "w symbol is already in use!"
         laurent_coeff = MRational(hlist())
         for pair in tqdm(self.nd_list,desc="Computing UV Laurent Coefficient"):
             numerator = pair[0]
             denominator = pair[1]
-
             # Compute the inverse denominator, multiplied by w**m, so that
             # it is regular in the neighborhood of the origin.
             w_rational, m = self.compute_w_rational(denominator,z,w)
-
             # Compute various partial derivatives of w_rational, evaluated
             # at w=0. These are precomputed in the interest of efficiency,
             # and will be accessed repeatedly in the loops below.
             diff_map = self.compute_diff_map(numerator,z,w,w_rational,zeta,m)
-
             for mbasis,polynomial in numerator.mdict.items():
-                #new_symbols = set(list(polynomial.free_symbols)+[z,])
                 new_symbols = set(list(polynomial.gens)+[z,])
                 new_poly = poly(polynomial.as_expr(),new_symbols,domain='QQ_I')
                 for p in range(0,new_poly.degree(gen=z)+1):
@@ -904,7 +763,6 @@ class MRational(object):
                     coeff = Rational(1,factorial(p))*(new_poly.diff((z,p))).eval(z,0)
                     term = MRational(diff_map[index])
                     term *= Rational(1,factorial(index))
-                    #term *= MRing({mbasis:numerator.mdict.values()[0].one})
                     term *= MRing(hmap({mbasis:numerator.poly_one()}))
                     term *= coeff
                     laurent_coeff += term
@@ -924,7 +782,6 @@ class MRational(object):
                 newpoly = poly(polynomial.as_expr(),newsymbols,domain='QQ_I')
                 degrees.append(newpoly.degree(gen=z))
             my_m = min(degrees)
-
             m += my_m*power
             for mbasis,polynomial in mring.mdict.items():
                 z_polynomial = mring.poly_zero()
@@ -971,16 +828,13 @@ class MRational(object):
         for pair in tqdm(self.nd_list,desc="Computing IR Laurent Coefficient"):
             numerator = pair[0]
             denominator = pair[1]
-
             # Compute the inverse denominator, divided by z**m, so that
             # it is regular in the neighborhood of the origin.
             z_rational, m = self.compute_z_rational(denominator,z)
-
             # Compute various partial derivatives of z_rational, evaluated
             # at z=0. These are precomputed in the interest of efficiency,
             # and will be accessed repeatedly in the loops below.
             diff_map = self.compute_ir_diff_map(numerator,z,z_rational,zeta,m)
-
             for mbasis,polynomial in numerator.mdict.items():
                 new_symbols = set(list(polynomial.gens)+[z,])
                 new_poly = poly(polynomial.as_expr(),new_symbols,domain='QQ_I')
@@ -1032,7 +886,6 @@ class MRational(object):
             r,upoly = pair[0].unify_generators(upoly)
             for key in pair[1].keys():
                 r,upoly = key.unify_generators(upoly)
-
         new_nd_list = hlist()
         for pair in self.nd_list:
             numerator,mypoly = pair[0].unify_generators(upoly)
@@ -1055,17 +908,9 @@ class MRational(object):
     def add(self,other,collect=True):
         nd_list = self.nd_list + other.nd_list
         r = MRational(nd_list)
-        #r,upoly = r.unify_generators()
         if collect:
             r = r.collect()
             r = r.cull_zeros()
-#            clean_nd_list = []
-#            #Cull Zeros
-#            for pair in r.nd_list:
-#                if not pair[0].is_empty():
-#                    clean_nd_list.append(pair)
-#            r =  MRational(clean_nd_list,self.basis)
-        
         return r
 
 
@@ -1079,33 +924,6 @@ class MRational(object):
 
     def __sub__(self,other):
         return self+(other*-1)
-
-
-#    def __eq__(self,other):
-#        assert type(self)==type(other)
-#        self_collected = self.collect()
-#        other_collected = other.collect()
-#        if not (len(self_collected.nd_list) == len(other_collected.nd_list)):
-#            return False
-#        self_indices = range(len(self_collected.nd_list))
-#        self_numerators = [nd[0] for nd in self_collected.nd_list]
-#        self_denominators = [nd[1] for nd in self_collected.nd_list]
-#        other_indices = range(len(other_collected.nd_list))
-#        other_numerators = [nd[0] for nd in other_collected.nd_list]
-#        other_denominators = [nd[1] for nd in other_collected.nd_list]
-#
-#        while len(self_indices)>0:
-#            self_index = self_indices[0]
-#            other_index = is_dict_in_list(self_denominators[self_index], other_denominators)
-#            if other_index<0:
-#                return False
-#            if self_numerators[self_index]!=other_numerators[other_index]:
-#                return False
-#
-#            self_indices.remove(self_index)
-#            other_indices.remove(other_index)
-#
-#        return True
 
 
     def __eq__(self,other):
@@ -1207,13 +1025,10 @@ class MRational(object):
             if not nr.is_empty():
                 new_nd_list.append(hlist([nr,d]))
         r = MRational(new_nd_list)
-
-
         #for i in tqdm([1,],desc="clear_signs"):
         r = self.clear_signs(r)
 
         return r
-
         #return self.clear_signs(r)
 
 
@@ -1241,57 +1056,19 @@ class MRational(object):
         return target_rat
 
 
-
-
-
-
-
-#        class hashable_dict(object):
-#            def __init__(self,mydict):
-#                self.mydict = mydict
-#            def HashCompare(self,x,y):
-#                xhash = x.__hash__()
-#                yhash = y.__hash__()
-#                if xhash>yhash:
-#                    return 1
-#                elif xhash==yhash:
-#                    return 0
-#                else:
-#                    return -1
-#            def GetCompTuple(self):
-#                comp_list = []
-#                sorted_keys = sorted(self.mydict.keys(),cmp = lambda x,y: self.HashCompare(x,y))
-#                for key in sorted_keys:
-#                    comp_list.append((key.__hash__(),self.mydict[key].__hash__()))
-#                return tuple(comp_list)
-#            def __hash__(self):
-#                return hash(self.GetCompTuple())
-#            def __eq__(self,other):
-#                return self.GetCompTuple()==other.GetCompTuple()
-#
-#        meta_denom_dict = {}
-#        #for pair in tqdm(self.nd_list,desc="collecting Terms"):
-#        for pair in self.nd_list:
-#            hashdict = hashable_dict(pair[1])
-#            meta_denom_dict.setdefault(hashdict,MRing({}))
-#            meta_denom_dict[hashdict] += pair[0]
-#        nd_list = []
-#        for key,val in zip(meta_denom_dict.keys(),meta_denom_dict.values()):
-#            cleanval = MRing(val)
-#            cleanval.cull_zeros()
-#            nd_list.append([cleanval,key.mydict])
-#        return MRational(nd_list,self.basis)
-
     def merge_denominators(self):
-        #This is a refined function which deals directly with pole factors instead
-        #of expanded MRings. This way, we can multiply by the polynomial LCD to
-        #merge denominators, cutting down on the ultimate size of the numerator
-        #MRing, which balloons exponentially in the number of poles merged.
+        """
+        This is a refined function which deals directly with pole factors instead
+        of expanded MRings. This way, we can multiply by the polynomial LCD to
+        merge denominators, cutting down on the ultimate size of the numerator
+        MRing, which balloons exponentially in the number of poles merged.
 
-        #First, we must compute the LCD. We will iterate through all poles in each
-        #denominator in the nd_list, and record the maximum power of each given
-        #pole. The dict containing all distinct poles and their maximum powers is
-        #the polynomial LCD.
+        First, we must compute the LCD. We will iterate through all poles in each
+        denominator in the nd_list, and record the maximum power of each given
+        pole. The dict containing all distinct poles and their maximum powers is
+        the polynomial LCD.
+
+        """
 
         LCD = hmap()
         #for pair in tqdm(self.nd_list,desc="Finding LCD"):
@@ -1361,46 +1138,13 @@ class MRational(object):
         return keyed_indices
 
 
-    # def bound_indices_to_components(self,
-    #                              first,
-    #                              last,
-    #                              bound_prefix='b',
-    #                              target_prefix='x'):
-    #     """
-    #     expands bound indices into a range of components `range(first,last+1)`.
-    #     Components are new indices with 'x' prefix (by default). All indices
-    #     with bound_prefix (assumed 'b') are considered bound. Returns target
-    #     `MRational` object.
-    #     """
-    #     tensor_symbols = self.tensor_symbols()
-    #     bound_indices = set()
-    #     for tensym in tensor_symbols:
-    #         head,prefix,index = split_tensor_symbol(tensym)
-    #         bound_indices |= {index[i] for i,v in enumerate(prefix)
-    #                           if v==bound_prefix}
-    #
-    #     source_rat = self
-    #     for ib in bound_indices:
-    #         target_rat = self*0
-    #         #source_symbols = source_rat.tensor_symbols()
-    #         #bound_symbols = set(filter(lambda s: bound_prefix+str(ib)
-    #         #                           in s.__str__(),source_symbols))
-    #         for target_index in range(first, last+1):
-    #             target_rat += source_rat.tensor_index_replacement(
-    #                                             ib,
-    #                                             target_index,
-    #                                             source_prefix=bound_prefix,
-    #                                             target_prefix = target_prefix)
-    #         source_rat = target_rat
-    #     return target_rat
-
     def bound_indices_to_components(self,
                                  first,
                                  last,
                                  bound_prefix='b',
                                  target_prefix='x'):
         """
-        expands bound indices into sums over component values, between `first`
+        Expand bound indices into sums over component values, between `first`
         and `last` (inclusive). Only applies when no bound indicies appear in
         denominators.
         """
@@ -1479,19 +1223,29 @@ class MRational(object):
         return polys
 
 
-    # def RemoveDuplicates(ring_it):
-    #     """
-    #     The canonical set(list()) trick doesn't seem to be using the overloaded
-    #     comparison operator defined within MRational, so this is just a manual
-    #     implementation that will reduce using equality in the sense of the
-    #     MRational objects. Takes an iterable, returns a dupe-free list.
-    #     Edit: Not sure why this wasn't working. Re-tested using list(set)
-    #     without issue...
-    #     """
-    #     source_ring_list = list(ring_it)
-    #     target_ring_list = []
-    #     while len(source_ring_list) > 0:
-    #         x = source_ring_list.pop(0)
-    #         source_ring_list = [y for y in source_ring_list if y!=x]
-    #         target_ring_list.append(x)
-    #     return target_ring_list
+#Some functions for comparison of denominator dictionaries (keyed by MRing objects).
+def is_dict_contained(_x,_y):
+    x = dict(_x)
+    y = dict(_y)
+    for xkey in x.keys():
+        if xkey in y.keys():
+            if x[xkey] != y[xkey]:
+                return False
+            else:
+                del y[xkey]
+        else:
+            return False
+    return True
+
+
+def is_dict_equal(x,y):
+    return is_dict_contained(x,y) and is_dict_contained(y,x)
+
+
+def is_dict_in_list(x,l):
+    if len(l)==0:
+        return -1
+    for i,y in enumerate(l):
+        if is_dict_equal(x,y):
+            return i
+    return -1
