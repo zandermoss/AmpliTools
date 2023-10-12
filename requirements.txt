@@ -1,0 +1,6 @@
+nautypy
+hashable_containers
+sympy
+networkx
+matplotlib
+jupyter
