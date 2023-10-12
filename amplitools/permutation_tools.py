@@ -1,6 +1,6 @@
 from itertools import permutations, combinations, product
 from functools import reduce
-from mring import MRing
+from .mring import MRing
 from sympy import poly, symbols, Rational
 import sys
 from hashable_containers import hmap
@@ -186,7 +186,7 @@ def monomial_signature(monomial,symbolblocks,cyclic=False):
 	blocks. The tag is useful because it's an injective map to the set of 
 	tuples of non-negative integers, which is totally ordered. The signature 
 	therefore has a unique monomial preimage. We can use the signatures to 
-	remove ``leg labeling'' redundancies in amplitudes.
+	remove "leg labeling" redundancies in amplitudes.
 	"""
 	x = symbols('x')
 	r = MRing(hmap({monomial:poly(1,x,domain='QQ_I')}))
@@ -240,14 +240,14 @@ def compose(A,B):
 
 
 def partial_symmetric_permutations(nlegs,permlegs):
-    partial_perms = list(permutations(permlegs))
-    perms = []
-    for pperm in partial_perms:
-        perm = list(range(1,nlegs+1))
-        for i,p in zip(permlegs,pperm):
-            perm[i-1] = p
-        perms.append(tuple(perm))
-    return perms
+	partial_perms = list(permutations(permlegs))
+	perms = []
+	for pperm in partial_perms:
+		perm = list(range(1,nlegs+1))
+		for i,p in zip(permlegs,pperm):
+			perm[i-1] = p
+		perms.append(tuple(perm))
+	return perms
 
 
 def symmetric_partition_permutations(partitions):

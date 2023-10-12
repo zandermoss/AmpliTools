@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amplitools.permutation_tools.rst &mdash; AmpliTools 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="amplitools.signed_permutations" href="signed_permutations.html" />
+    <link rel="prev" title="amplitools.mring" href="mring.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AmpliTools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="amplitude.html">amplitools.amplitude</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">amplitools.diagram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface.html">amplitools.interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinematic_basis.html">amplitools.kinematic_basis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mathematica_conversion.html">amplitools.mathematica_conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrational.html">amplitools.mrational</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mring.html">amplitools.mring</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">amplitools.permutation_tools.rst</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.antisymmetric_orbit"><code class="docutils literal notranslate"><span class="pre">antisymmetric_orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.canonical_monomial"><code class="docutils literal notranslate"><span class="pre">canonical_monomial()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.cyclic_orbit"><code class="docutils literal notranslate"><span class="pre">cyclic_orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.get_cycles"><code class="docutils literal notranslate"><span class="pre">get_cycles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.get_sign"><code class="docutils literal notranslate"><span class="pre">get_sign()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.minimal_tag"><code class="docutils literal notranslate"><span class="pre">minimal_tag()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.monomial_signature"><code class="docutils literal notranslate"><span class="pre">monomial_signature()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.monomial_tag"><code class="docutils literal notranslate"><span class="pre">monomial_tag()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.orbit"><code class="docutils literal notranslate"><span class="pre">orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.permute_blocks"><code class="docutils literal notranslate"><span class="pre">permute_blocks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.symmetric_group"><code class="docutils literal notranslate"><span class="pre">symmetric_group()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.symmetric_orbit"><code class="docutils literal notranslate"><span class="pre">symmetric_orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.permutation_tools.tuple_compare"><code class="docutils literal notranslate"><span class="pre">tuple_compare()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="signed_permutations.html">amplitools.signed_permutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_tools.html">amplitools.tensor_tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AmpliTools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">amplitools.permutation_tools.rst</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/permutation_tools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-amplitools.permutation_tools">
+<span id="amplitools-permutation-tools-rst"></span><h1>amplitools.permutation_tools.rst<a class="headerlink" href="#module-amplitools.permutation_tools" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.antisymmetric_orbit">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">antisymmetric_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.antisymmetric_orbit" title="Link to this definition"></a></dt>
+<dd><p>Specializes orbit() to the symmetric group,
+including signs, over the blocks in symbolblocks.
+This “antisymmetrizes” r (without applying a prefactor).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.canonical_monomial">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">canonical_monomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monomial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.canonical_monomial" title="Link to this definition"></a></dt>
+<dd><p>Uses the same methods as monomial_signature() to send (monomial) to
+the preimage of the minimal tag over its orbit.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.cyclic_orbit">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">cyclic_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.cyclic_orbit" title="Link to this definition"></a></dt>
+<dd><p>Specializes orbit() to the cyclic group
+over the blocks in symbolblocks.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.get_cycles">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">get_cycles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">perm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.get_cycles" title="Link to this definition"></a></dt>
+<dd><p>Takes a tuple of permutation targets, and returns the cycle
+decomposition.</p>
+<p>(perm) should be a tuple (i_1,i_2,…),
+where (..) are permutations of the list (1,…,n). These jth
+entry is interpreted as the target position for the jth symbol
+block.
+[cycles] is a tuple of tuples, each of which is a cycle of the
+permutation (perm).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.get_sign">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">get_sign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">perm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.get_sign" title="Link to this definition"></a></dt>
+<dd><p>Constructs the sign of a permutation by counting cycles.</p>
+<p>(perm) should be a tuple (i_1,i_2,…),
+where (..) are permutations of the list (1,…,n). These jth
+entry is interpreted as the target position for the jth symbol
+block.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.minimal_tag">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">minimal_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tagtuple</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.minimal_tag" title="Link to this definition"></a></dt>
+<dd><p>Using tuple_compare(), find the minimal element of the tuple
+of tags, (tagtuple).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.monomial_signature">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">monomial_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monomial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cyclic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.monomial_signature" title="Link to this definition"></a></dt>
+<dd><p>Computes the minimum of monomial tags (the signature) over the orbit
+of the monomial under the action of the symmetric group on the symbol
+blocks. The tag is useful because it’s an injective map to the set of
+tuples of non-negative integers, which is totally ordered. The signature
+therefore has a unique monomial preimage. We can use the signatures to
+remove “leg labeling” redundancies in amplitudes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.monomial_tag">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">monomial_tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monomial</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.monomial_tag" title="Link to this definition"></a></dt>
+<dd><p>Defines an injective map from monomials to tuples of non-negative
+integers. The image of the map is called the “tag” of the monomial.
+The monomial belongs to an MRing defined over a set of symbols,
+given by (symbolblocks). All symbols in the monomial are transformed
+to tuples of non-negative integers given by their postitions in the
+sorted list of symbols. The space of such lists is totally ordered,
+using element-wise integer ordering, treating tuple[0] as the
+least-significant element (see tuple_compare()).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.orbit">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'f'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.orbit" title="Link to this definition"></a></dt>
+<dd><p>Given (r) defined over (symbolblocks), compute
+its orbit under (perms), either signed or unsigned,
+depending on (signed).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.permute_blocks">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">permute_blocks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'f'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'f'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.permute_blocks" title="Link to this definition"></a></dt>
+<dd><p>(perm) should be a tuple (i_1,i_2,…),
+where (..) are permutations of the list (1,…,n). These jth
+entry is interpreted as the target position for the jth symbol
+block.
+(symbolblocks) should be a list of blocks of symbols, not necessarily
+all of the same size! Allowing this heterogeneity allows us to permute
+legs of different ranks and spins. That might sound like bad news, but
+remember that we’re really only permuting the labels, that is, which leg
+we call 1,2,3, and so on. So, it’s completely valid to say, for example,
+“the spin-1 leg, called 1, and the spin-2 leg, called 2, will now have their
+labels swapped. That is, the permuted object will have the spin-2 leg labelled
+1, and the spin-1 leg labelled 2.” (signed) indicates whether or not
+the r should be multiplied by the sign of the permutation.
+This is useful when permuting legs which live in the adjoint rep. of a lie algebra.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.symmetric_group">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">symmetric_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.symmetric_group" title="Link to this definition"></a></dt>
+<dd><p>Generates a list of lists (called maps), each of which contains
+n [source,target] pair lists. Thould be a tuple (i_1,i_2,…),
+where (..) are permutations of the list (1,…,n). These jth
+entry is interpreted as the target position for the jth symbol
+block. There are n! such lists in maps, each representing one of
+the elements of S(n).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.symmetric_orbit">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">symmetric_orbit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbolblocks</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.symmetric_orbit" title="Link to this definition"></a></dt>
+<dd><p>Specializes orbit() to the symmetric group
+over the blocks in symbolblocks. This
+“symmetrizes” r (without applying a prefactor).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.permutation_tools.tuple_compare">
+<span class="sig-prename descclassname"><span class="pre">amplitools.permutation_tools.</span></span><span class="sig-name descname"><span class="pre">tuple_compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.permutation_tools.tuple_compare" title="Link to this definition"></a></dt>
+<dd><p>Compare integer tuple A and B.
+Return -1 if A&lt;B, 0 if A=B, 1 if A&gt;B.
+Compares in descending order, left to right
+(that is, leftmost entry (tuple[0]) is most-significant).</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mring.html" class="btn btn-neutral float-left" title="amplitools.mring" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="signed_permutations.html" class="btn btn-neutral float-right" title="amplitools.signed_permutations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alexander &#34;Zander&#34; Moss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

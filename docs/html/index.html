@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AmpliTools &mdash; AmpliTools 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="amplitools.amplitude" href="amplitude.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            AmpliTools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="amplitude.html">amplitools.amplitude</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">amplitools.diagram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface.html">amplitools.interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinematic_basis.html">amplitools.kinematic_basis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mathematica_conversion.html">amplitools.mathematica_conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrational.html">amplitools.mrational</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mring.html">amplitools.mring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="permutation_tools.html">amplitools.permutation_tools.rst</a></li>
+<li class="toctree-l1"><a class="reference internal" href="signed_permutations.html">amplitools.signed_permutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_tools.html">amplitools.tensor_tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">AmpliTools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">AmpliTools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="amplitools">
+<h1>AmpliTools<a class="headerlink" href="#amplitools" title="Link to this heading"></a></h1>
+<p><strong>AmpliTools</strong> provides a framework for symbolic calculation of scattering amplitudes
+in scalar quantum field theories with arbitrary interactions and mass spectra. Kinematic
+manipulations are carried out in a basis of Mandelstam invariants, so <em>AmpliTools</em> calculations
+are valid in arbitrary spacetime dimension.</p>
+<p><em>AmpliTools</em> supports:</p>
+<ul class="simple">
+<li><p>Automatic Feynman diagram generation and isomorphism reduction using <a class="reference external" href="https://networkx.org/">NetworkX</a> and <a class="reference external" href="https://zandermoss.github.io/nautypy/">nautypy</a>.</p></li>
+<li><p>Construction and manipulation of symbolic amplitude expressions from Feynman diagrams using <a class="reference external" href="https://www.sympy.org/">SymPy</a>.</p></li>
+<li><p>Flavor tensor algebra, symmetry group actions, and index canonization.</p></li>
+<li><p>Reduction of symbolic amplitudes to minimal kinematic bases.</p></li>
+<li><p>User interaction through the <a class="reference external" href="https://jupyter.org/">Jupyter Notebook</a>, allowing symbolic input with a relatively clean syntax, typeset symbolic output with LaTeX, and visualization of Feynman diagrams.</p></li>
+</ul>
+<p><em>AmpliTools</em> was developed to carry out specific calculations in scalar field theories
+(see <a class="reference external" href="https://arxiv.org/abs/2012.13076">https://arxiv.org/abs/2012.13076</a>). Although it was designed with generalization to
+arbitrary spins in mind, it currently supports only scalar theories.</p>
+<p>Usage of <code class="docutils literal notranslate"><span class="pre">AmpliTools</span></code> is demonstrated in an example notebook, <code class="docutils literal notranslate"><span class="pre">examples/scalar_example.ipynb</span></code>.</p>
+<p>Reference documentation is available at <a class="reference external" href="https://zandermoss.github.io/AmpliTools/">https://zandermoss.github.io/AmpliTools/</a></p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Source code is available at <a class="reference external" href="https://github.com/zandermoss/AmpliTools/">https://github.com/zandermoss/AmpliTools/</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nautypy</span></code> can be built from source available on <a class="reference external" href="https://github.com/zandermoss/nautypy/">github</a></p></li>
+</ul>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h3>
+<ul>
+<li><p>In addition to <code class="docutils literal notranslate"><span class="pre">nautypy</span></code>, <code class="docutils literal notranslate"><span class="pre">AmpliTools</span></code> requires:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hashable_containers</span> <span class="p">(</span><span class="n">packaged</span> <span class="k">with</span> <span class="n">nautypy</span><span class="p">)</span>
+<span class="n">sympy</span>
+<span class="n">networkx</span>
+<span class="n">jupyter</span>
+<span class="n">matplotlib</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="quick-start">
+<h3>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h3>
+<ul>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">install.sh</span></code></p></li>
+<li><p>Or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">build</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span> <span class="o">.</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Running <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">lab</span></code> from the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory will expose an example notebook
+<code class="docutils literal notranslate"><span class="pre">examples/scalar_example.ipynb</span></code>.</p></li>
+<li><p>This notebook demonstrates <em>AmpliTools</em> by computing symbolic expressions for the four and
+five point tree amplitudes of a renormalizable scalar theory. The notebook is annotated in
+an attempt to explain the roles of the most important components of the software, and to
+exhibit various features of the interface.</p></li>
+</ul>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Docs built with <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a>.</p></li>
+</ul>
+<section id="building-docs">
+<h3>Building Docs<a class="headerlink" href="#building-docs" title="Link to this heading"></a></h3>
+<ul>
+<li><p>Automatically with <code class="docutils literal notranslate"><span class="pre">install.sh</span></code>.</p></li>
+<li><p>Manually:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">docs</span><span class="o">/</span>
+<span class="n">make</span> <span class="n">html</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index.html</span></code> can then be found in docs/build/html/</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="amplitude.html">amplitools.amplitude</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="amplitude.html#amplitools.amplitude.compute_contractions"><code class="docutils literal notranslate"><span class="pre">compute_contractions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amplitude.html#amplitools.amplitude.compute_tree_amplitude"><code class="docutils literal notranslate"><span class="pre">compute_tree_amplitude()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amplitude.html#amplitools.amplitude.evolution_expansion"><code class="docutils literal notranslate"><span class="pre">evolution_expansion()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amplitude.html#amplitools.amplitude.isomorphism_classification"><code class="docutils literal notranslate"><span class="pre">isomorphism_classification()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="amplitude.html#amplitools.amplitude.supergraph_dfs"><code class="docutils literal notranslate"><span class="pre">supergraph_dfs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">amplitools.diagram</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="diagram.html#amplitools.diagram.Diagram"><code class="docutils literal notranslate"><span class="pre">Diagram</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="diagram.html#amplitools.diagram.graph_copy"><code class="docutils literal notranslate"><span class="pre">graph_copy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="diagram.html#amplitools.diagram.propagator_copy"><code class="docutils literal notranslate"><span class="pre">propagator_copy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interface.html">amplitools.interface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interface.html#amplitools.interface.FeynmanRules"><code class="docutils literal notranslate"><span class="pre">FeynmanRules</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface.html#amplitools.interface.Interface"><code class="docutils literal notranslate"><span class="pre">Interface</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface.html#amplitools.interface.TensorSymmetries"><code class="docutils literal notranslate"><span class="pre">TensorSymmetries</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface.html#amplitools.interface.draw_graphs"><code class="docutils literal notranslate"><span class="pre">draw_graphs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="kinematic_basis.html">amplitools.kinematic_basis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="kinematic_basis.html#amplitools.kinematic_basis.Basis"><code class="docutils literal notranslate"><span class="pre">Basis</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mathematica_conversion.html">amplitools.mathematica_conversion</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mathematica_conversion.html#amplitools.mathematica_conversion.tensor_poly_to_mathematica"><code class="docutils literal notranslate"><span class="pre">tensor_poly_to_mathematica()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mrational.html">amplitools.mrational</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mrational.html#amplitools.mrational.MRational"><code class="docutils literal notranslate"><span class="pre">MRational</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mring.html">amplitools.mring</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mring.html#amplitools.mring.MRing"><code class="docutils literal notranslate"><span class="pre">MRing</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mring.html#amplitools.mring.join"><code class="docutils literal notranslate"><span class="pre">join()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="permutation_tools.html">amplitools.permutation_tools.rst</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.antisymmetric_orbit"><code class="docutils literal notranslate"><span class="pre">antisymmetric_orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.canonical_monomial"><code class="docutils literal notranslate"><span class="pre">canonical_monomial()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.cyclic_orbit"><code class="docutils literal notranslate"><span class="pre">cyclic_orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.get_cycles"><code class="docutils literal notranslate"><span class="pre">get_cycles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.get_sign"><code class="docutils literal notranslate"><span class="pre">get_sign()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.minimal_tag"><code class="docutils literal notranslate"><span class="pre">minimal_tag()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.monomial_signature"><code class="docutils literal notranslate"><span class="pre">monomial_signature()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.monomial_tag"><code class="docutils literal notranslate"><span class="pre">monomial_tag()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.orbit"><code class="docutils literal notranslate"><span class="pre">orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.permute_blocks"><code class="docutils literal notranslate"><span class="pre">permute_blocks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.symmetric_group"><code class="docutils literal notranslate"><span class="pre">symmetric_group()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.symmetric_orbit"><code class="docutils literal notranslate"><span class="pre">symmetric_orbit()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="permutation_tools.html#amplitools.permutation_tools.tuple_compare"><code class="docutils literal notranslate"><span class="pre">tuple_compare()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="signed_permutations.html">amplitools.signed_permutations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="signed_permutations.html#amplitools.signed_permutations.SignedPermutation"><code class="docutils literal notranslate"><span class="pre">SignedPermutation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="signed_permutations.html#amplitools.signed_permutations.SignedPermutationGroup"><code class="docutils literal notranslate"><span class="pre">SignedPermutationGroup</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_tools.html">amplitools.tensor_tools</a></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="amplitude.html" class="btn btn-neutral float-right" title="amplitools.amplitude" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alexander &#34;Zander&#34; Moss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

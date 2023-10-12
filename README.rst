@@ -3,10 +3,10 @@ AmpliTools
 ==========
 **AmpliTools** provides a framework for symbolic calculation of scattering amplitudes
 in scalar quantum field theories with arbitrary interactions and mass spectra. Kinematic
-manipulations are carried out in a basis of Mandelstam invariants, so AmpliTools calculations
+manipulations are carried out in a basis of Mandelstam invariants, so *AmpliTools* calculations
 are valid in arbitrary spacetime dimension.
 
-*AmpliTools* supports
+*AmpliTools* supports:
 
 * Automatic Feynman diagram generation and isomorphism reduction using `NetworkX <https://networkx.org/>`_ and `nautypy <https://zandermoss.github.io/nautypy/>`_.
 * Construction and manipulation of symbolic amplitude expressions from Feynman diagrams using `SymPy <https://www.sympy.org/>`_.
@@ -50,7 +50,7 @@ Quick Start
 Examples
 ========
 * Running ``jupyter lab`` from the ``examples/`` directory will expose an example notebook
-``examples/scalar_example.ipynb``. 
+  ``examples/scalar_example.ipynb``. 
 
 * This notebook demonstrates *AmpliTools* by computing symbolic expressions for the four and
   five point tree amplitudes of a renormalizable scalar theory. The notebook is annotated in

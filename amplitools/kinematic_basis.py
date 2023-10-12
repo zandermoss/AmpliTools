@@ -1,5 +1,5 @@
-from mring import MRing
-from permutation_tools import monomial_signature, monomial_tag, symmetric_orbit, minimal_tag, tuple_compare
+from .mring import MRing
+from .permutation_tools import monomial_signature, monomial_tag, symmetric_orbit, minimal_tag, tuple_compare
 from itertools import permutations,product
 import pickle
 from sympy import Rational, poly, symbols
@@ -7,11 +7,11 @@ from hashable_containers import hmap
 
 
 class Basis():
-    """A minimal basis of Mandelstam invariants.
+	"""A minimal basis of Mandelstam invariants.
 
-    Provides methods for conversion of ``MRational`` and ``MRing`` objects
-    to a minimal, on-shell basis of invariants. Currently handles scalars only.
-    """
+	Provides methods for conversion of ``MRational`` and ``MRing`` objects
+	to a minimal, on-shell basis of invariants. Currently handles scalars only.
+	"""
 	def __init__(self,spin,npoint,symmetric=False):
 		self.spin = spin
 		self.npoint = npoint

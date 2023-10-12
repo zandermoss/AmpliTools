@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amplitools.amplitude &mdash; AmpliTools 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="amplitools.diagram" href="diagram.html" />
+    <link rel="prev" title="AmpliTools" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AmpliTools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">amplitools.amplitude</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.amplitude.compute_contractions"><code class="docutils literal notranslate"><span class="pre">compute_contractions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.amplitude.compute_tree_amplitude"><code class="docutils literal notranslate"><span class="pre">compute_tree_amplitude()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.amplitude.evolution_expansion"><code class="docutils literal notranslate"><span class="pre">evolution_expansion()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.amplitude.isomorphism_classification"><code class="docutils literal notranslate"><span class="pre">isomorphism_classification()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.amplitude.supergraph_dfs"><code class="docutils literal notranslate"><span class="pre">supergraph_dfs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">amplitools.diagram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface.html">amplitools.interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinematic_basis.html">amplitools.kinematic_basis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mathematica_conversion.html">amplitools.mathematica_conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrational.html">amplitools.mrational</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mring.html">amplitools.mring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="permutation_tools.html">amplitools.permutation_tools.rst</a></li>
+<li class="toctree-l1"><a class="reference internal" href="signed_permutations.html">amplitools.signed_permutations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_tools.html">amplitools.tensor_tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AmpliTools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">amplitools.amplitude</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/amplitude.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-amplitools.amplitude">
+<span id="amplitools-amplitude"></span><h1>amplitools.amplitude<a class="headerlink" href="#module-amplitools.amplitude" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.amplitude.compute_contractions">
+<span class="sig-prename descclassname"><span class="pre">amplitools.amplitude.</span></span><span class="sig-name descname"><span class="pre">compute_contractions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_legs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_symmetries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.amplitude.compute_contractions" title="Link to this definition"></a></dt>
+<dd><p>Generate all diagrams resulting from Wick contraction of a set of interaction vertices <code class="docutils literal notranslate"><span class="pre">vertices</span></code>.</p>
+<p>The calculation proceeds in four stages,</p>
+<ol class="arabic simple">
+<li><p>Generate all (connected) (multi)graphs resulting from adding contraction edges
+to a collection of interaction vertices <cite>vertices</cite> and external-leg vertices
+<cite>external_legs</cite>.</p></li>
+<li><p>Store these graphs in a dictionary keyed by canonically labeled graphs, and valued
+with lists of isomorphisms (node relabeling maps) and the number of each isomorph
+appearing in the full set of contraction multigraphs.</p></li>
+<li><p>Compute an <code class="docutils literal notranslate"><span class="pre">MRational</span></code> expression for each canonically labeled graph using
+the Feynman rules.</p></li>
+<li><p>Generate the full amplitude by applying each isomorphism to the canonical MRational
+and summing over the resulting expressions.</p></li>
+</ol>
+<p>Generally, symbolic algebra is <em>much</em> slower than graph isomorphism or permutation group calculations, so the algorithm outlined above attempts to minimize the number of actual Feynman-rule constructions by building expressions for canonical isomorphs only.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For each diagram’s graph <code class="docutils literal notranslate"><span class="pre">g</span></code>, there exists a canonical labeling <code class="docutils literal notranslate"><span class="pre">g_canon</span></code>
+which is related to <code class="docutils literal notranslate"><span class="pre">g</span></code> by a vertex label permutation <code class="docutils literal notranslate"><span class="pre">s_g</span></code>.
+The vertices of any such <code class="docutils literal notranslate"><span class="pre">g</span></code> are divided into <em>external leg</em> vertices, and
+<em>internal</em> (interaction) vertices.</p>
+<p>Once the graph <code class="docutils literal notranslate"><span class="pre">g</span></code> is combined with the Feynman rules to compute an <code class="docutils literal notranslate"><span class="pre">MRational</span></code>
+term <code class="docutils literal notranslate"><span class="pre">rat(g)</span></code> contributing to the amplitude, all internal leg momenta are replaced
+by linear combinations of external leg momenta (or dummy loop momenta), and all internal
+flavor indices are summed over, so the only labels remaining are the external leg labels.
+The canonical permutation <code class="docutils literal notranslate"><span class="pre">s_g</span></code> thus acts on <code class="docutils literal notranslate"><span class="pre">rat(g_canon)</span></code> by a restricted permuation
+of the external leg labels <code class="docutils literal notranslate"><span class="pre">s_g_ext</span></code>.</p>
+<p>We could compute <code class="docutils literal notranslate"><span class="pre">rat(g)</span></code> for every graph spat out by the <code class="docutils literal notranslate"><span class="pre">supergraph_dfs</span></code> algorithm,
+but we would waste time doing unnecessary rational algebra. Instead, we will “bin” the
+graphs <cite>g</cite> returned from <code class="docutils literal notranslate"><span class="pre">supergraph_dfs</span></code> by their canonical isomorphs <code class="docutils literal notranslate"><span class="pre">g_canon</span></code> and
+the associated external label permutation <code class="docutils literal notranslate"><span class="pre">s_g_ext</span></code> into a nested hmap structure
+<code class="docutils literal notranslate"><span class="pre">classes</span></code>.</p>
+<p>To construct the amplitude, we step through the keys of <code class="docutils literal notranslate"><span class="pre">classes</span></code> and call
+<code class="docutils literal notranslate"><span class="pre">Diagram.compute_mrational</span></code> <em>only once</em> per isomorphism class. For each <code class="docutils literal notranslate"><span class="pre">s_g_ext</span></code>
+in <code class="docutils literal notranslate"><span class="pre">classes[g_canon]</span></code>, we compute <code class="docutils literal notranslate"><span class="pre">s_g_ext(rat(g_canon))</span></code>, multiply it by the
+number of appearances the associated diagram <code class="docutils literal notranslate"><span class="pre">(classes[g_canon][s_g_ext])</span></code> makes in
+<code class="docutils literal notranslate"><span class="pre">diagrams</span></code>, and add the result to the amplitude.</p>
+<p>The number of contractions grows rapidly with the number of external legs,
+but the number of isomorphism classes grows much more slowly. In the worst
+case, we work with an EFT containing an infinite tower of interaction operators
+of unbounded dimension. Wick contractions of such a tower should yield a set
+of labeled trees of cardinality O(n^n), where n is the number of external legs.
+The number of isomorphism classes, on the other hand, is roughly O(3^n)
+[doi:10.2307/1969046].</p>
+<p>An additional improvement to this approach would see canonization used
+as a pruning technique in the <code class="docutils literal notranslate"><span class="pre">supergraph_dfs</span></code> algorithm to reduce the number
+of contractions constructed by binning “as we go”. Empirically, constructing
+and manipulating rational expressions appears to take much longer than
+generating graphs from contractions, so we’ll punt that optimization.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices</strong> (<em>list</em>) – The interaction vertices appearing in each diagram.</p></li>
+<li><p><strong>propagators</strong> (<em>dict</em>) – A dict, keyed by particle type, containing free propagators (from <code class="docutils literal notranslate"><span class="pre">interface.FeynmanRules</span></code>).</p></li>
+<li><p><strong>external_legs</strong> (<em>list</em>) – A list of particle type strings corresponding to the external fields.</p></li>
+<li><p><strong>tensor_symmetries</strong> (<em>dict</em>) – A dict of tensor symmetry generating sets keyed by tensor head string (from <code class="docutils literal notranslate"><span class="pre">TensorSymmetries</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The amplitude term corresponding to all diagrams containing the collection of interaction vertices <code class="docutils literal notranslate"><span class="pre">vertices</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>amp_term (<a class="reference internal" href="mrational.html#amplitools.mrational.MRational" title="amplitools.mrational.MRational">MRational</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.amplitude.compute_tree_amplitude">
+<span class="sig-prename descclassname"><span class="pre">amplitools.amplitude.</span></span><span class="sig-name descname"><span class="pre">compute_tree_amplitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interactions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_legs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_symmetries</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.amplitude.compute_tree_amplitude" title="Link to this definition"></a></dt>
+<dd><p>Compute a tree amplitude from interaction operators <code class="docutils literal notranslate"><span class="pre">interactions</span></code>,
+free propagators <code class="docutils literal notranslate"><span class="pre">propagators</span></code>, external-leg operators <code class="docutils literal notranslate"><span class="pre">external_legs</span></code>,
+and a description of the symmetries of any flavor tensors appearing
+in these operators.</p>
+<p>The calculation proceeds in four stages,</p>
+<ol class="arabic simple">
+<li><p>Expand the time-evolution operator in powers of g.</p></li>
+<li><p>Extract the tree contribution.</p></li>
+<li><p>Strip off its operator-valued coefficient.</p></li>
+<li><p>Compute all possible Wick contractions of the various interaction operators
+appearing in the coefficient.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interactions</strong> (<em>list</em>) – A list of interaction operators (from <code class="docutils literal notranslate"><span class="pre">interface.FeynmanRules</span></code>).</p></li>
+<li><p><strong>propagators</strong> (<em>dict</em>) – A dict, keyed by particle type, containing free propagators (from <code class="docutils literal notranslate"><span class="pre">interface.FeynmanRules</span></code>).</p></li>
+<li><p><strong>external_legs</strong> (<em>list</em>) – A list of particle type strings corresponding to the external fields.</p></li>
+<li><p><strong>tensor_symmetries</strong> (<em>dict</em>) – A dict of tensor symmetry generating sets keyed by tensor head string (from <code class="docutils literal notranslate"><span class="pre">TensorSymmetries</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tree amplitude.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>amplitude (<a class="reference internal" href="mrational.html#amplitools.mrational.MRational" title="amplitools.mrational.MRational">MRational</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.amplitude.evolution_expansion">
+<span class="sig-prename descclassname"><span class="pre">amplitools.amplitude.</span></span><span class="sig-name descname"><span class="pre">evolution_expansion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_order</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.amplitude.evolution_expansion" title="Link to this definition"></a></dt>
+<dd><p>Expand the time evolution operator U to order <code class="docutils literal notranslate"><span class="pre">g_order</span></code> in the
+perturbative parameter <code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>symbol_list</strong> (<em>list</em>) – A list of operator coefficients, ordered so that <code class="docutils literal notranslate"><span class="pre">symbol_list[i]</span></code> corresponds to the coefficient of <code class="docutils literal notranslate"><span class="pre">g^i</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An expansion of <code class="docutils literal notranslate"><span class="pre">U</span></code> to order <code class="docutils literal notranslate"><span class="pre">g_order</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>U_series (sympy.series)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.amplitude.isomorphism_classification">
+<span class="sig-prename descclassname"><span class="pre">amplitools.amplitude.</span></span><span class="sig-name descname"><span class="pre">isomorphism_classification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diagrams</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.amplitude.isomorphism_classification" title="Link to this definition"></a></dt>
+<dd><p>Reduce diagrams by isomorphism class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>diagrams</strong> (<em>list</em>) – A list of all diagrams resulting from the Wick contraction of a particular set of interaction vertices and external leg vertices. Generally contains many isomorphs of a small number of isomorphism class representatives (canonically labeled graphs).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An hmap keyed by canonically labeled graphs and valued by hmaps, which themselves are keyed by external label permutations <code class="docutils literal notranslate"><span class="pre">s_g_ext</span></code> and valued by integer counts for the corresponding isomorph.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>classes (hashable_containers.hmap)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amplitools.amplitude.supergraph_dfs">
+<span class="sig-prename descclassname"><span class="pre">amplitools.amplitude.</span></span><span class="sig-name descname"><span class="pre">supergraph_dfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diagram</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.amplitude.supergraph_dfs" title="Link to this definition"></a></dt>
+<dd><p>Generate all connected trees resulting from Wick contraction of a given
+collection of interaction vertices and external-leg vertices.</p>
+<p>Given a set of operators (in this case containing both single external-leg operators and
+groups of operators corresponding to interaction vertices), Wick contraction is the
+process of generating all possible pairs of operators, such that each operator appears
+in at most one pair.</p>
+<p>Each such pairing (or “contraction”) can be represented by a graph, or “Feynman diagram” <cite>d</cite>.
+The vertices of <cite>d</cite> correspond to sets of field operators. “External” vertices
+map to singleton sets containing only the corresponding external field operator, while
+“internal/interaction” vertices map to sets containing all the field operators
+involved in the interaction. Contracted pairs of operators are represented by edges
+between the vertices containing those operators. External vertices are incident to a single
+edge, while interaction vertices are incident to three or more edges.</p>
+<p>Each Feynman diagram can then be combined with a set of algebraic rules (the “Feynman rules”)
+to construct the corresponding contribution to the scattering amplitude involving the
+specified external states.</p>
+<p>We focus only on <em>connected</em> <em>tree</em> diagrams (though it is straightforward to generalize
+this approach to loop diagrams and disconnected diagrams). We generate all contractions
+using a backtacking algorithm. In particular, we perform a depth-first search of an implicit
+tree containing all possible partial Wick contraction diagrams as nodes.
+This tree (the “supergraph”) is rooted at a completely disconnected diagram (no edges)
+containing the interaction and external vertices, with a designated root vertex to include
+in the first contractions.</p>
+<p>If it is possible to follow a chain of contractions beginning with an operator of some
+vertex <cite>v</cite> in diagram <cite>d</cite> all the way back to the root diagram, then <cite>v</cite> is
+said to be <em>connected</em>. Otherwise it is <em>disconnected</em>.</p>
+<p>If at least one operator of a vertex <cite>v</cite> has not yet been contracted with another operator,
+<cite>v</cite> is said to be <em>valent</em>.</p>
+<p>Given a supergraph node diagram <cite>d</cite> and a <em>connected</em>, <em>valent</em> vertex <cite>v</cite> in <cite>d</cite>, calling
+<code class="docutils literal notranslate"><span class="pre">supergraph_dfs(d,v)</span></code> first generates the child nodes of <cite>d</cite> (if they exist) in two steps:</p>
+<ol class="arabic simple">
+<li><p>For each particle type <cite>t</cite>, select one uncontracted operator of type <cite>t</cite> belonging
+to <cite>v</cite> (if it exists) and another uncontracted operator of type <cite>t</cite> belonging to
+a <em>valent</em>, <em>disconnected</em> vertex <cite>w</cite> (if it exists); Create a copy <cite>d*</cite> of the diagram
+<cite>d</cite> and contract these two operators, adding the edge (<cite>v</cite>,`w`) to <cite>d*</cite>.</p></li>
+<li><p>Add each such <cite>d*</cite> as a node of the supergraph, and add the pair (<cite>d</cite>, <cite>d*</cite>) as an edge.</p></li>
+</ol>
+<p>Next, <code class="docutils literal notranslate"><span class="pre">supergraph_dfs</span></code> determines what to do with each child diagram <cite>d*</cite> in turn:</p>
+<ul class="simple">
+<li><p>If there are valent vertices in <cite>d*</cite>, but none of them are <em>connected</em>, the only way to
+proceed would be to begin contractions in a <em>disconnected component</em> of the diagram. We
+are only interested in connected diagrams, so we prune the search tree and discard <cite>d*</cite>.</p></li>
+<li><p>If there are valent vertices in <cite>d*</cite>, but none of them are <em>disconnected</em>, the only way
+to proceed would be to add an edge between two tree vertices, creating a loop diagram.
+For the time being, we are focusing on tree diagrams, and so we prune the search tree
+and discard <cite>d*</cite> whenever this happens.</p></li>
+<li><p>If no valent vertices remain in <cite>d*</cite>, it must be a connected Feynman diagram
+representing a complete Wick contraction, and is therefore a leaf of the search tree
+(supergraph). In this case, we append <cite>d*</cite> to the list of complete, connected
+tree diagrams (<code class="docutils literal notranslate"><span class="pre">diagram_list</span></code>).</p></li>
+<li><p>If <cite>d*</cite> contains both connected and disconnected valent nodes, we select a
+connected, valent vertex <cite>v*</cite> in <cite>d*</cite>; call <code class="docutils literal notranslate"><span class="pre">supergraph_dfs(d*,v*)</span></code>, which
+returns a list of all leaf diagrams belonging to the subtree rooted at <cite>d*</cite>;
+and concatenate this list to <code class="docutils literal notranslate"><span class="pre">diagram_list</span></code>.</p></li>
+</ul>
+<p>Once all children <cite>d*</cite> have been processed, <code class="docutils literal notranslate"><span class="pre">diagram_list</span></code> contains all leaf diagrams
+belonging to the subtree rooted at <cite>d</cite>. Finally, this list is returned from
+<code class="docutils literal notranslate"><span class="pre">supergraph_dfs(`d`,`v`)</span></code>. It follows immediately that calling <code class="docutils literal notranslate"><span class="pre">supergraph_dfs</span></code> on
+a completely disconnected diagram containing an even number of operators (which we always
+assume) grouped into internal and external vertices with no edges between them will return
+a complete list of connected, tree diagrams involving that particular set of interactions
+and external states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>diagram</strong> (<em>amplitools.Diagram</em>) – A partially contracted diagram serving as the root node for the search tree.</p></li>
+<li><p><strong>node</strong> (<em>some hashable object</em>) – A valent, connected vertex in <code class="docutils literal notranslate"><span class="pre">diagram''.</span> <span class="pre">Edges</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">added</span> <span class="pre">to</span> <span class="pre">``diagram</span></code> connecting <code class="docutils literal notranslate"><span class="pre">node</span></code> to other valent vertices in <code class="docutils literal notranslate"><span class="pre">diagram</span></code>, if possible, to generate child diagrams of <code class="docutils literal notranslate"><span class="pre">diagram</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of all connected tree diagrams resulting from Wick contraction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>diagram_list (list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="AmpliTools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="diagram.html" class="btn btn-neutral float-right" title="amplitools.diagram" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alexander &#34;Zander&#34; Moss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

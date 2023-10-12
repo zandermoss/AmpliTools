@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amplitools.signed_permutations &mdash; AmpliTools 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=f2a433a1"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="amplitools.tensor_tools" href="tensor_tools.html" />
+    <link rel="prev" title="amplitools.permutation_tools.rst" href="permutation_tools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AmpliTools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="amplitude.html">amplitools.amplitude</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">amplitools.diagram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface.html">amplitools.interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="kinematic_basis.html">amplitools.kinematic_basis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mathematica_conversion.html">amplitools.mathematica_conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrational.html">amplitools.mrational</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mring.html">amplitools.mring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="permutation_tools.html">amplitools.permutation_tools.rst</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">amplitools.signed_permutations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutation"><code class="docutils literal notranslate"><span class="pre">SignedPermutation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutation.cycles"><code class="docutils literal notranslate"><span class="pre">SignedPermutation.cycles()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutation.identity"><code class="docutils literal notranslate"><span class="pre">SignedPermutation.identity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutation.inverse"><code class="docutils literal notranslate"><span class="pre">SignedPermutation.inverse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutation.parity"><code class="docutils literal notranslate"><span class="pre">SignedPermutation.parity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutation.permute"><code class="docutils literal notranslate"><span class="pre">SignedPermutation.permute()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutationGroup"><code class="docutils literal notranslate"><span class="pre">SignedPermutationGroup</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#amplitools.signed_permutations.SignedPermutationGroup.group_sort"><code class="docutils literal notranslate"><span class="pre">SignedPermutationGroup.group_sort()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tensor_tools.html">amplitools.tensor_tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AmpliTools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">amplitools.signed_permutations</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/signed_permutations.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-amplitools.signed_permutations">
+<span id="amplitools-signed-permutations"></span><h1>amplitools.signed_permutations<a class="headerlink" href="#module-amplitools.signed_permutations" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">amplitools.signed_permutations.</span></span><span class="sig-name descname"><span class="pre">SignedPermutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_permlist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_sign</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutation" title="Link to this definition"></a></dt>
+<dd><p>A container for Bosonic and Fermionic symmetries.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutation.cycles">
+<span class="sig-name descname"><span class="pre">cycles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutation.cycles" title="Link to this definition"></a></dt>
+<dd><p>Returns the cycle decomposition of self.
+[cycles] is a tuple of tuples, each of which is a cycle of the
+permutation self.permlist.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutation.identity">
+<span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutation.identity" title="Link to this definition"></a></dt>
+<dd><p>Return the identity permutation of appropriate length.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutation.inverse">
+<span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutation.inverse" title="Link to this definition"></a></dt>
+<dd><p>Return the inverse of the self permutation. The sign remains the same.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutation.parity">
+<span class="sig-name descname"><span class="pre">parity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutation.parity" title="Link to this definition"></a></dt>
+<dd><p>Constructs the parity of a permutation by counting cycles.
+Don’t confuse the parity of a signed permutation with the
+sign! The sign is an additional element of Z_2 which we’ve
+tacked on to handle signed symmetries of tensors. The
+parity is what we traditionally think of as the “sign” of
+a permutation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutation.permute">
+<span class="sig-name descname"><span class="pre">permute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_iterable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutation.permute" title="Link to this definition"></a></dt>
+<dd><p>Apply permutation (disregarding sign) to iterable [_iterable], return as list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutationGroup">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">amplitools.signed_permutations.</span></span><span class="sig-name descname"><span class="pre">SignedPermutationGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generators</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutationGroup" title="Link to this definition"></a></dt>
+<dd><p>A container for <em>groups</em> of Bosonic or Fermionic symmetries.</p>
+<p>Provides methods for canonical labeling of <code class="docutils literal notranslate"><span class="pre">MRing</span></code> and <code class="docutils literal notranslate"><span class="pre">MRational</span></code> objects
+under particle exchange.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amplitools.signed_permutations.SignedPermutationGroup.group_sort">
+<span class="sig-name descname"><span class="pre">group_sort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ituple</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#amplitools.signed_permutations.SignedPermutationGroup.group_sort" title="Link to this definition"></a></dt>
+<dd><p>This function solves a problem in which we are given a list of signed
+permutations and a tuple of strings (which are an ordered set relative
+to Python’s cmp() function). We are asked to find
+the permutation which “best sorts” the tuple (in ascending order), and
+return the sorted tuple and the signed permutation which “best sorted” it.</p>
+<p>When we feed a pair of tuples to python’s cmp() function, it will
+employ a R^n ordering. That is, when a and b are tuples of the same
+length, cmp() returns cmp(a[i],b[i]) where i is the smallest index at which
+a[i]!=b[i]. This is a very nice default behavior, because an ordered
+tuple x will always be the minimum of any set of permutations of that
+tuple.</p>
+<p>Given a set of permutations (in this case, the group of permutations, self).
+we compute the action of each of these permutations on ituple and then find
+the minimum of this set relative to python’s cmp() operator. The result is
+the “best sorted” in the sense that completing our permutation subgroup to
+S(n) and repeating this process will always yield ituple sorted in ascending
+order as the minimum. When we order the permuted ituples with cmp(), the
+minimum element possible in this ordered set is the ascending sort of ituple,
+and all other permutations are ordered based on “how well” they approximate
+an ascending sort.</p>
+<p>Given a tensor with a (possibly)
+signed index symmetry, we can take any index tuple ituple and find a canonical
+ordering together with the permutation (and its sign!) required to get us
+there. This allows us to systematically exploit tensor symmetries to simplify
+expressions involving contracted tensors by canonicalizing their indices
+<em>while keeping track of signs</em>, which is crucial if we have antisymmetric
+indices, as in the case where our tensor is actually a structure constant!</p>
+<p>Note that this function may return a list of permutations if more than one
+best sorts ituple. This is possible if ituple has redundancies.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="permutation_tools.html" class="btn btn-neutral float-left" title="amplitools.permutation_tools.rst" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tensor_tools.html" class="btn btn-neutral float-right" title="amplitools.tensor_tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alexander &#34;Zander&#34; Moss.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
